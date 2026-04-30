@@ -87,7 +87,10 @@
       "Bash(rm -rf resources/views/components/accounts resources/views/components/admin resources/views/components/dashboard resources/views/livewire/accounts resources/views/livewire/admin resources/views/livewire/dashboard resources/views/livewire/market resources/views/pages/admin app/Livewire/Accounts app/Livewire/Admin app/Livewire/Dashboard app/Livewire/Market)",
       "mcp__laravel-boost__search-docs",
       "WebFetch(domain:legacy-api.deriv.com)",
-      "Bash(/c/Users/EMILY/.config/herd/bin/php.bat *)"
+      "Bash(/c/Users/EMILY/.config/herd/bin/php.bat *)",
+      "Bash(xargs -I {} find {} -name \"*.php\")",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__application-info"
     ]
   },
   "enableAllProjectMcpServers": true,

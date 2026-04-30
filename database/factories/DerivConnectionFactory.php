@@ -21,7 +21,13 @@ class DerivConnectionFactory extends Factory
             'token_type' => 'Bearer',
             'expires_at' => now()->addHour(),
             'scope' => 'trade account_manage',
+            'type' => 'follower',
         ];
+    }
+
+    public function master(): static
+    {
+        return $this->state(['type' => 'master']);
     }
 
     public function expired(): static

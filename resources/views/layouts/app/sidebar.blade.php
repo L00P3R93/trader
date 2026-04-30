@@ -32,8 +32,40 @@
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
+                @if(auth()->user()->hasDerivConnected())
+                    <flux:sidebar.group :heading="__('Deriv Account')" class="grid">
+                        <flux:sidebar.item
+                            icon="user-circle"
+                            :href="route('account')"
+                            :current="request()->routeIs('account')"
+                            wire:navigate
+                            class="rounded-lg"
+                        >
+                            {{ __('Account Overview') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item
+                            icon="chart-bar"
+                            :href="route('trades')"
+                            :current="request()->routeIs('trades')"
+                            wire:navigate
+                            class="rounded-lg"
+                        >
+                            {{ __('Trade History') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
+
                 @if(auth()->user()->isAdmin())
                     <flux:sidebar.group :heading="__('Administration')" class="grid">
+                        <flux:sidebar.item
+                            icon="chart-pie"
+                            :href="route('admin.dashboard')"
+                            :current="request()->routeIs('admin.dashboard')"
+                            wire:navigate
+                            class="rounded-lg"
+                        >
+                            {{ __('Analytics') }}
+                        </flux:sidebar.item>
                         <flux:sidebar.item
                             icon="users"
                             :href="route('admin.users')"

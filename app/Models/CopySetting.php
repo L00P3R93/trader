@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\CopySettingFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CopySetting extends Model
 {
+    /** @use HasFactory<CopySettingFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'master_connection_id',
