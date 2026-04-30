@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\DerivConnectionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class DerivConnection extends Model
+{
+    /** @use HasFactory<DerivConnectionFactory> */
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'access_token',
+        'token_type',
+        'expires_at',
+        'scope',
+        'type',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'access_token' => 'encrypted',
+            'expires_at' => 'datetime',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    public function isMaster(): bool
+    {
+        return $this->type === 'master';
+    }
+
+    public function isFollower(): bool
+    {
+        return $this->type === 'follower';
+    }
+
+    public function followers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CopySetting::class, 'master_connection_id');
+    }
+}
