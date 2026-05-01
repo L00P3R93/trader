@@ -3,13 +3,13 @@
     {{-- Current Setup Banner --}}
     @if($this->currentSetting)
         @php $setting = $this->currentSetting; @endphp
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <div class="flex items-center justify-between">
                     <flux:heading size="lg">Your Copy Setup</flux:heading>
                     @if($setting->is_active)
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                            <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></span>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#22C55E]/10 px-3 py-1 text-sm font-medium text-[#22C55E]">
+                            <span class="h-2 w-2 animate-pulse rounded-full bg-[#22C55E]"></span>
                             Active
                         </span>
                     @else
@@ -23,14 +23,14 @@
 
             <div class="px-6 py-5">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div class="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-800/50">
+                    <div class="rounded-lg bg-[#111827] px-4 py-3">
                         <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Following Master</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                        <p class="mt-1 font-semibold text-white">
                             {{ $setting->masterConnection->user->name }}
                         </p>
                         <p class="text-xs text-zinc-500">{{ $setting->masterConnection->user->email }}</p>
                     </div>
-                    <div class="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-800/50">
+                    <div class="rounded-lg bg-[#111827] px-4 py-3">
                         <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Trigger Threshold</p>
                         <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
                             {{ $setting->min_consecutive_wins }}
@@ -38,9 +38,9 @@
                         </p>
                         <p class="text-xs text-zinc-500">before copying starts</p>
                     </div>
-                    <div class="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-800/50">
+                    <div class="rounded-lg bg-[#111827] px-4 py-3">
                         <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Status</p>
-                        <p class="mt-1 font-semibold {{ $setting->is_active ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500' }}">
+                        <p class="mt-1 font-semibold {{ $setting->is_active ? 'text-[#22C55E]' : 'text-zinc-500' }}">
                             {{ $setting->is_active ? 'Copying trades' : 'Paused' }}
                         </p>
                         <p class="text-xs text-zinc-500">updated {{ $setting->updated_at->diffForHumans() }}</p>
@@ -86,8 +86,8 @@
     {{-- Configure Form --}}
     @if($showForm && $selectedMasterId)
         @php $master = $this->masters->firstWhere('id', $selectedMasterId); @endphp
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Configure Copy Settings</flux:heading>
                 <flux:text class="mt-0.5 text-sm text-zinc-500">
                     Following: <span class="font-medium text-zinc-900 dark:text-white">{{ $master?->user->name }}</span>
@@ -157,7 +157,7 @@
         </div>
 
         @if($this->masters->isEmpty())
-            <div class="rounded-xl border border-zinc-200 bg-white px-6 py-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-6 py-12 text-center">
                 <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
                     <flux:icon.user-group class="size-6 text-zinc-400" />
                 </div>
@@ -171,8 +171,8 @@
                     <div wire:key="{{ $master->id }}"
                          class="rounded-xl border p-5 transition-colors
                              {{ $isFollowing
-                                 ? 'border-emerald-300 bg-emerald-50/50 dark:border-emerald-700/50 dark:bg-emerald-900/10'
-                                 : 'border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600' }}">
+                                 ? 'border-[#1E45FC]/40 bg-[#1E45FC]/5'
+                                 : 'border-[#1F2937] bg-[#0B1220] hover:border-[#1E45FC]/30' }}">
 
                         <div class="mb-3 flex items-start justify-between">
                             <div class="flex items-center gap-3">
@@ -183,8 +183,8 @@
                                 </div>
                             </div>
                             @if($isFollowing)
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                <span class="inline-flex items-center gap-1 rounded-full bg-[#CDF12B]/10 px-2 py-0.5 text-xs font-medium text-[#CDF12B]">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-[#CDF12B]"></span>
                                     Following
                                 </span>
                             @endif

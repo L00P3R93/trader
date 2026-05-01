@@ -54,8 +54,8 @@
         @endif
 
         {{-- Profile Summary --}}
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Profile</flux:heading>
             </div>
             <div class="px-6 py-5">
@@ -80,7 +80,7 @@
 
         {{-- Live Balance (from WebSocket) --}}
         @if(! empty($liveBalance))
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 dark:border-emerald-800/40 dark:bg-emerald-900/10">
+            <div class="rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/5">
                 <div class="px-6 py-4">
                     <div class="flex items-center justify-between">
                         <div>
@@ -97,8 +97,8 @@
                                 Account: {{ $liveBalance['loginid'] ?? '—' }}
                             </p>
                         </div>
-                        <div class="rounded-full bg-emerald-500/10 p-3">
-                            <flux:icon.banknotes class="size-6 text-emerald-500" />
+                        <div class="rounded-full bg-[#22C55E]/10 p-3">
+                            <flux:icon.banknotes class="size-6 text-[#22C55E]" />
                         </div>
                     </div>
                 </div>
@@ -109,14 +109,14 @@
         @if(! empty($accounts))
             {{-- Real Accounts --}}
             @if(! empty($this->realAccounts))
-                <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-                    <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+                    <div class="border-b border-[#1F2937] px-6 py-4">
                         <flux:heading size="lg">Real Accounts</flux:heading>
                         <flux:text class="mt-0.5 text-sm text-zinc-500">
                             {{ count($this->realAccounts) }} {{ Str::plural('account', count($this->realAccounts)) }}
                         </flux:text>
                     </div>
-                    <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <div class="divide-y divide-[#1F2937]">
                         @foreach($this->realAccounts as $account)
                             @php
                                 $accountId   = $account['account_id'] ?? $account['loginid'] ?? '—';
@@ -127,11 +127,11 @@
                             @endphp
                             <div class="flex items-center justify-between px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div @class(['flex h-9 w-9 items-center justify-center rounded-full', 'bg-emerald-500/10' => !$isCfd, 'bg-purple-500/10' => $isCfd])>
+                                    <div @class(['flex h-9 w-9 items-center justify-center rounded-full', 'bg-[#22C55E]/10' => !$isCfd, 'bg-purple-500/10' => $isCfd])>
                                         @if($isCfd)
                                             <flux:icon.chart-bar class="size-4 text-purple-500" />
                                         @else
-                                            <flux:icon.building-library class="size-4 text-emerald-500" />
+                                            <flux:icon.building-library class="size-4 text-[#22C55E]" />
                                         @endif
                                     </div>
                                     <div>
@@ -147,7 +147,7 @@
                                     @if($isCfd)
                                         <span class="rounded-full bg-purple-500/10 px-2.5 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400">CFD</span>
                                     @else
-                                        <span class="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">Options</span>
+                                        <span class="rounded-full bg-[#22C55E]/10 px-2.5 py-0.5 text-xs font-medium text-[#22C55E]">Options</span>
                                     @endif
                                 </div>
                             </div>
@@ -158,12 +158,12 @@
 
             {{-- Demo Accounts --}}
             @if(! empty($this->demoAccounts))
-                <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-                    <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+                    <div class="border-b border-[#1F2937] px-6 py-4">
                         <flux:heading size="lg">Demo Accounts</flux:heading>
                         <flux:text class="mt-0.5 text-sm text-zinc-500">Practice with virtual money — no risk.</flux:text>
                     </div>
-                    <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <div class="divide-y divide-[#1F2937]">
                         @foreach($this->demoAccounts as $account)
                             @php
                                 $accountId   = $account['account_id'] ?? $account['loginid'] ?? '—';
@@ -226,22 +226,22 @@
 
         {{-- Connection details --}}
         @php $conn = auth()->user()->derivConnection; @endphp
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Connection Details</flux:heading>
             </div>
             <div class="grid grid-cols-1 gap-3 px-6 py-5 sm:grid-cols-3">
-                <div class="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-800/50">
+                <div class="rounded-lg bg-[#111827] px-4 py-3">
                     <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Token Type</p>
-                    <p class="mt-1 font-semibold capitalize text-zinc-900 dark:text-white">{{ $conn->token_type }}</p>
+                    <p class="mt-1 font-semibold capitalize text-white">{{ $conn->token_type }}</p>
                 </div>
-                <div class="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-800/50">
+                <div class="rounded-lg bg-[#111827] px-4 py-3">
                     <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Scopes</p>
-                    <p class="mt-1 font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $conn->scope ?? 'trade account_manage' }}</p>
+                    <p class="mt-1 font-mono text-xs text-zinc-300">{{ $conn->scope ?? 'trade account_manage' }}</p>
                 </div>
-                <div class="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-800/50">
+                <div class="rounded-lg bg-[#111827] px-4 py-3">
                     <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Token Expires</p>
-                    <p class="mt-1 text-sm font-medium {{ $conn->isExpired() ? 'text-red-500' : 'text-zinc-900 dark:text-white' }}">
+                    <p class="mt-1 text-sm font-medium {{ $conn->isExpired() ? 'text-[#FF5A5F]' : 'text-white' }}">
                         @if($conn->expires_at)
                             @if($conn->isExpired()) Expired @else {{ $conn->expires_at->diffForHumans() }} @endif
                         @else
@@ -250,7 +250,7 @@
                     </p>
                 </div>
             </div>
-            <div class="flex gap-2 border-t border-zinc-100 px-6 py-4 dark:border-zinc-800">
+            <div class="flex gap-2 border-t border-[#1F2937] px-6 py-4">
                 <flux:button href="{{ route('deriv.connect') }}" size="sm" variant="ghost" icon="arrow-path">
                     Reconnect
                 </flux:button>

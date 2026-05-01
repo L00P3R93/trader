@@ -90,7 +90,11 @@
       "Bash(/c/Users/EMILY/.config/herd/bin/php.bat *)",
       "Bash(xargs -I {} find {} -name \"*.php\")",
       "mcp__laravel-boost__last-error",
-      "mcp__laravel-boost__application-info"
+      "mcp__laravel-boost__application-info",
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object FullName)",
+      "Bash(Select-Object -Property Name, LastWriteTime)",
+      "Bash(Format-Table)"
     ]
   },
   "enableAllProjectMcpServers": true,

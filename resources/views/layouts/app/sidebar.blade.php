@@ -3,9 +3,9 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <flux:sidebar.header class="border-b border-zinc-100 dark:border-zinc-800">
+    <body class="min-h-screen bg-[#020617]">
+        <flux:sidebar sticky collapsible="mobile" class="border-e border-[#1F2937] bg-[#0B1220]">
+            <flux:sidebar.header class="border-b border-[#1F2937]">
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
@@ -91,9 +91,9 @@
             <flux:spacer />
 
             {{-- Deriv connection status in sidebar footer --}}
-            <div class="mx-2 mb-2 rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-800/50">
+            <div class="mx-2 mb-2 rounded-lg border border-[#1F2937] bg-[#111827] px-3 py-2">
                 <div class="flex items-center gap-2">
-                    <span class="h-2 w-2 shrink-0 rounded-full {{ auth()->user()->hasDerivConnected() ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600' }}"></span>
+                    <span class="h-2 w-2 shrink-0 rounded-full {{ auth()->user()->hasDerivConnected() ? 'bg-[#22C55E]' : 'bg-zinc-600' }}"></span>
                     <span class="truncate text-xs text-zinc-500 dark:text-zinc-400">
                         {{ auth()->user()->hasDerivConnected() ? 'Deriv connected' : 'Deriv not connected' }}
                     </span>
@@ -104,7 +104,7 @@
         </flux:sidebar>
 
         {{-- Mobile Header --}}
-        <flux:header class="border-b border-zinc-200 bg-white lg:hidden dark:border-zinc-800 dark:bg-zinc-900">
+        <flux:header class="border-b border-[#1F2937] bg-[#0B1220] lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />

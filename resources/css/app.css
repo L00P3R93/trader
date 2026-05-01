@@ -23,6 +23,25 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
+    /* Brand palette — Ocean primary, Lemonade accent, trading data colors */
+    --color-primary: #1E45FC;
+    --color-accent-lemon: #CDF12B;
+    --color-success: #22C55E;
+    --color-danger: #FF5A5F;
+
+    /* Background scale */
+    --color-bg-main: #020617;
+    --color-bg-card: #0B1220;
+    --color-bg-elevated: #111827;
+
+    /* Text scale */
+    --color-text-base: #E2E8F0;
+    --color-text-secondary: #94A3B8;
+    --color-text-muted: #475569;
+
+    /* Border */
+    --color-border-base: #1F2937;
+
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
@@ -30,9 +49,10 @@
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        /* Flux primary buttons become Ocean blue */
+        --color-accent: #1E45FC;
+        --color-accent-content: #1E45FC;
+        --color-accent-foreground: var(--color-white);
     }
 }
 
@@ -60,7 +80,3 @@ textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
-
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */

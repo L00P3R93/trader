@@ -3,7 +3,7 @@
     {{-- KPI Row --}}
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5">
             <div class="flex items-center justify-between">
                 <flux:text class="text-sm font-medium text-zinc-500">Total Users</flux:text>
                 <div class="rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800">
@@ -16,18 +16,18 @@
             </p>
         </div>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5">
             <div class="flex items-center justify-between">
                 <flux:text class="text-sm font-medium text-zinc-500">Deriv Connected</flux:text>
-                <div class="rounded-lg bg-emerald-500/10 p-2">
-                    <flux:icon.link class="size-4 text-emerald-500" />
+                <div class="rounded-lg bg-[#22C55E]/10 p-2">
+                    <flux:icon.link class="size-4 text-[#22C55E]" />
                 </div>
             </div>
             <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{{ $this->userStats['connected'] }}</p>
             <p class="mt-1 text-xs text-zinc-400">{{ $this->userStats['connection_rate'] }}% connection rate</p>
         </div>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5">
             <div class="flex items-center justify-between">
                 <flux:text class="text-sm font-medium text-zinc-500">Master Traders</flux:text>
                 <div class="rounded-lg bg-amber-500/10 p-2">
@@ -38,7 +38,7 @@
             <p class="mt-1 text-xs text-zinc-400">{{ $this->derivStats['followers'] }} followers</p>
         </div>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5">
             <div class="flex items-center justify-between">
                 <flux:text class="text-sm font-medium text-zinc-500">Active Copy Setups</flux:text>
                 <div class="rounded-lg bg-violet-500/10 p-2">
@@ -55,8 +55,8 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
         {{-- Signup Trend --}}
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Signups — Last 14 Days</flux:heading>
             </div>
             <div class="px-6 py-5">
@@ -83,8 +83,8 @@
         </div>
 
         {{-- Platform Health --}}
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Platform Health</flux:heading>
             </div>
             <div class="space-y-4 px-6 py-5">
@@ -95,8 +95,8 @@
                         <span class="text-zinc-600 dark:text-zinc-400">Deriv Connection Rate</span>
                         <span class="font-semibold text-zinc-900 dark:text-white">{{ $this->userStats['connection_rate'] }}%</span>
                     </div>
-                    <div class="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                        <div class="h-full rounded-full bg-emerald-500" style="width: {{ $this->userStats['connection_rate'] }}%"></div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-[#111827]">
+                        <div class="h-full rounded-full bg-[#22C55E]" style="width: {{ $this->userStats['connection_rate'] }}%"></div>
                     </div>
                 </div>
 
@@ -111,7 +111,7 @@
                         <span class="text-zinc-600 dark:text-zinc-400">Copy Trading Activation</span>
                         <span class="font-semibold text-zinc-900 dark:text-white">{{ $copyRate }}%</span>
                     </div>
-                    <div class="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-[#111827]">
                         <div class="h-full rounded-full bg-violet-500" style="width: {{ min(100, $copyRate) }}%"></div>
                     </div>
                 </div>
@@ -127,22 +127,22 @@
                         <span class="text-zinc-600 dark:text-zinc-400">Active Tokens</span>
                         <span class="font-semibold text-zinc-900 dark:text-white">{{ $healthRate }}%</span>
                     </div>
-                    <div class="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                        <div class="h-full rounded-full {{ $healthRate >= 80 ? 'bg-emerald-500' : 'bg-amber-500' }}" style="width: {{ $healthRate }}%"></div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-[#111827]">
+                        <div class="h-full rounded-full {{ $healthRate >= 80 ? 'bg-[#22C55E]' : 'bg-amber-500' }}" style="width: {{ $healthRate }}%"></div>
                     </div>
                 </div>
 
                 {{-- Counts grid --}}
                 <div class="grid grid-cols-3 gap-3 pt-2">
-                    <div class="rounded-lg bg-zinc-50 px-3 py-2 text-center dark:bg-zinc-800/50">
+                    <div class="rounded-lg bg-[#111827] px-3 py-2 text-center">
                         <p class="text-lg font-bold text-zinc-900 dark:text-white">{{ $this->userStats['today_signups'] }}</p>
                         <p class="text-xs text-zinc-400">Today</p>
                     </div>
-                    <div class="rounded-lg bg-zinc-50 px-3 py-2 text-center dark:bg-zinc-800/50">
+                    <div class="rounded-lg bg-[#111827] px-3 py-2 text-center">
                         <p class="text-lg font-bold text-zinc-900 dark:text-white">{{ $this->userStats['week_signups'] }}</p>
                         <p class="text-xs text-zinc-400">This Week</p>
                     </div>
-                    <div class="rounded-lg bg-zinc-50 px-3 py-2 text-center dark:bg-zinc-800/50">
+                    <div class="rounded-lg bg-[#111827] px-3 py-2 text-center">
                         <p class="text-lg font-bold text-zinc-900 dark:text-white">{{ $this->userStats['month_signups'] }}</p>
                         <p class="text-xs text-zinc-400">This Month</p>
                     </div>
@@ -157,8 +157,8 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
         {{-- Top Masters --}}
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Top Master Traders</flux:heading>
                 <flux:text class="mt-0.5 text-sm text-zinc-500">Ranked by number of followers</flux:text>
             </div>
@@ -168,7 +168,7 @@
                     <flux:text class="text-zinc-500">No master traders yet.</flux:text>
                 </div>
             @else
-                <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <div class="divide-y divide-[#1F2937]">
                     @foreach($this->copyTradingStats['top_masters'] as $index => $master)
                         <div class="flex items-center justify-between px-6 py-3.5">
                             <div class="flex items-center gap-3">
@@ -191,12 +191,12 @@
         </div>
 
         {{-- Recent Signups --}}
-        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Recent Signups</flux:heading>
                 <flux:text class="mt-0.5 text-sm text-zinc-500">Last 10 registered users</flux:text>
             </div>
-            <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <div class="divide-y divide-[#1F2937]">
                 @foreach($this->recentUsers as $user)
                     <div class="flex items-center justify-between px-6 py-3">
                         <div class="flex items-center gap-3">
@@ -212,8 +212,8 @@
                             </div>
                         </div>
                         @if($user->derivConnection)
-                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="inline-flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-xs text-[#22C55E]">
+                                <span class="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
                                 Connected
                             </span>
                         @else

@@ -11,9 +11,9 @@
     </div>
 
     {{-- Table --}}
-    <div class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+    <div class="overflow-hidden rounded-xl border border-[#1F2937]">
         <table class="w-full text-sm">
-            <thead class="bg-zinc-50 dark:bg-zinc-800/60">
+            <thead class="bg-[#111827]">
                 <tr>
                     <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">User</th>
                     <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Account</th>
@@ -23,9 +23,9 @@
                     <th class="px-4 py-3 text-right font-medium text-zinc-500 dark:text-zinc-400">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+            <tbody class="divide-y divide-[#1F2937] bg-[#0B1220]">
                 @forelse($this->users as $user)
-                    <tr wire:key="{{ $user->id }}" class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                    <tr wire:key="{{ $user->id }}" class="hover:bg-[#111827]/50 transition-colors">
 
                         {{-- User --}}
                         <td class="px-4 py-3">
@@ -47,8 +47,8 @@
                         <td class="px-4 py-3">
                             @if($user->derivConnection)
                                 <div class="flex flex-col gap-1">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 w-fit">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-[#22C55E]/10 px-2.5 py-1 text-xs font-medium text-[#22C55E] w-fit">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
                                         Connected
                                     </span>
                                     @if($user->derivConnection->isMaster())
