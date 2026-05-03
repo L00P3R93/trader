@@ -94,7 +94,8 @@
       "Bash(Get-ChildItem *)",
       "Bash(Select-Object FullName)",
       "Bash(Select-Object -Property Name, LastWriteTime)",
-      "Bash(Format-Table)"
+      "Bash(Format-Table)",
+      "mcp__laravel-boost__list-routes"
     ]
   },
   "enableAllProjectMcpServers": true,

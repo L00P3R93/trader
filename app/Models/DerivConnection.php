@@ -6,6 +6,7 @@ use Database\Factories\DerivConnectionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DerivConnection extends Model
 {
@@ -19,6 +20,7 @@ class DerivConnection extends Model
         'expires_at',
         'scope',
         'type',
+        'master_account_id',
     ];
 
     protected function casts(): array
@@ -49,7 +51,7 @@ class DerivConnection extends Model
         return $this->type === 'follower';
     }
 
-    public function followers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function followers(): HasMany
     {
         return $this->hasMany(CopySetting::class, 'master_connection_id');
     }

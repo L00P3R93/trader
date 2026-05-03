@@ -13,7 +13,7 @@
                             Active
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-zinc-800 px-3 py-1 text-sm font-medium text-zinc-400">
                             <span class="h-2 w-2 rounded-full bg-zinc-400"></span>
                             Paused
                         </span>
@@ -22,21 +22,33 @@
             </div>
 
             <div class="px-6 py-5">
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
                     <div class="rounded-lg bg-[#111827] px-4 py-3">
                         <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Following Master</p>
-                        <p class="mt-1 font-semibold text-white">
-                            {{ $setting->masterConnection->user->name }}
-                        </p>
+                        <p class="mt-1 font-semibold text-white">{{ $setting->masterConnection->user->name }}</p>
                         <p class="text-xs text-zinc-500">{{ $setting->masterConnection->user->email }}</p>
                     </div>
                     <div class="rounded-lg bg-[#111827] px-4 py-3">
-                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Trigger Threshold</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
-                            {{ $setting->min_consecutive_wins }}
-                            {{ Str::plural('consecutive win', $setting->min_consecutive_wins) }}
+                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Your Account</p>
+                        @if($setting->follower_account_id)
+                            <p class="mt-1 font-mono font-semibold text-white text-sm">{{ $setting->follower_account_id }}</p>
+                        @else
+                            <p class="mt-1 text-sm text-zinc-500">Not set</p>
+                        @endif
+                    </div>
+                    <div class="rounded-lg bg-[#111827] px-4 py-3">
+                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Follower Pattern</p>
+                        <div class="mt-1 flex items-center gap-2">
+                            <span class="font-mono font-bold text-[#CDF12B] text-lg tracking-widest">
+                                {{ $setting->follower_pattern ?? '111' }}
+                            </span>
+                            @if(!$setting->pattern_enabled)
+                                <span class="text-xs text-zinc-500">(disabled)</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-zinc-500">
+                            {{ strlen($setting->follower_pattern ?? '111') }} trade pattern
                         </p>
-                        <p class="text-xs text-zinc-500">before copying starts</p>
                     </div>
                     <div class="rounded-lg bg-[#111827] px-4 py-3">
                         <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Status</p>
@@ -65,7 +77,7 @@
                         variant="ghost"
                         icon="pencil"
                     >
-                        Edit Settings
+                        Edit Pattern
                     </flux:button>
 
                     <flux:button
@@ -90,44 +102,101 @@
             <div class="border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Configure Copy Settings</flux:heading>
                 <flux:text class="mt-0.5 text-sm text-zinc-500">
-                    Following: <span class="font-medium text-zinc-900 dark:text-white">{{ $master?->user->name }}</span>
+                    Following: <span class="font-medium text-white">{{ $master?->user->name }}</span>
                 </flux:text>
             </div>
 
             <div class="space-y-5 px-6 py-5">
-                <div>
-                    <flux:label>Consecutive Wins Required</flux:label>
-                    <flux:text class="mb-3 text-xs text-zinc-500">
-                        How many wins in a row the master must have before your account copies the next trade.
-                    </flux:text>
 
-                    <div class="flex items-center gap-3">
-                        <flux:input
-                            wire:model.live="minConsecutiveWins"
-                            type="number"
-                            min="1"
-                            max="50"
-                            class="w-28"
-                        />
-                        <span class="text-sm text-zinc-500">
-                            {{ Str::plural('win', $minConsecutiveWins) }} required before copying
-                        </span>
+                {{-- Follower account selector --}}
+                @if(count($this->followerAccounts) > 0)
+                    <div>
+                        <flux:label>Your Trading Account</flux:label>
+                        <flux:text class="mb-2 text-xs text-zinc-500">Choose which account (real or demo) will copy trades.</flux:text>
+                        <div class="space-y-2">
+                            @foreach($this->followerAccounts as $account)
+                                @php
+                                    $isDemo = ($account['account_type'] ?? '') === 'demo';
+                                    $label = ($isDemo ? 'Demo' : 'Real') . ' — ' . $account['account_id'];
+                                    $sub = number_format($account['balance'] ?? 0, 2) . ' ' . strtoupper($account['currency'] ?? 'USD');
+                                @endphp
+                                <label wire:key="{{ $account['account_id'] }}"
+                                    class="flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-colors
+                                        {{ $followerAccountId === $account['account_id']
+                                            ? 'border-[#1E45FC]/50 bg-[#1E45FC]/5'
+                                            : 'border-[#1F2937] bg-[#111827] hover:border-[#1F2937]/80' }}"
+                                >
+                                    <input
+                                        type="radio"
+                                        wire:model.live="followerAccountId"
+                                        value="{{ $account['account_id'] }}"
+                                        class="text-[#1E45FC] focus:ring-[#1E45FC]"
+                                    />
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-medium text-white text-sm">{{ $label }}</span>
+                                            <span @class([
+                                                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                                'bg-amber-500/10 text-amber-400' => $isDemo,
+                                                'bg-[#22C55E]/10 text-[#22C55E]' => !$isDemo,
+                                            ])>{{ $isDemo ? 'Demo' : 'Real' }}</span>
+                                        </div>
+                                        <p class="text-xs text-zinc-500 mt-0.5">Balance: {{ $sub }}</p>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('followerAccountId')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
+                @endif
 
-                    @error('minConsecutiveWins')
+                {{-- Pattern toggle --}}
+                <flux:checkbox wire:model.live="patternEnabled" label="Enable Follower Pattern" />
+
+                {{-- Pattern input --}}
+                <div>
+                    <flux:input
+                        wire:model.live="followerPattern"
+                        label="Slave / Follower Pattern"
+                        placeholder="e.g. 111 or 101"
+                        :disabled="!$patternEnabled"
+                        description="Use 1 for Win and 0 for Loss. Copy starts when master's last outcomes match this sequence."
+                    />
+                    @error('followerPattern')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
+
+                    {{-- Visual pattern preview --}}
+                    @if($patternEnabled && strlen($followerPattern) > 0 && preg_match('/^[01]+$/', $followerPattern))
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <span class="text-xs text-zinc-400">Pattern:</span>
+                            @foreach(str_split($followerPattern) as $bit)
+                                <span @class([
+                                    'inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold',
+                                    'bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/40' => $bit === '1',
+                                    'bg-red-500/20 text-red-400 border border-red-500/40' => $bit === '0',
+                                ])>
+                                    {{ $bit === '1' ? 'W' : 'L' }}
+                                </span>
+                            @endforeach
+                            <span class="text-xs text-zinc-500 ml-1">({{ strlen($followerPattern) }} trade{{ strlen($followerPattern) !== 1 ? 's' : '' }} needed)</span>
+                        </div>
+                    @endif
                 </div>
 
-                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/40 dark:bg-amber-900/20">
+                <div class="rounded-lg border border-amber-800/40 bg-amber-900/20 p-4">
                     <div class="flex gap-3">
-                        <flux:icon.information-circle class="size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <flux:icon.information-circle class="size-5 shrink-0 text-amber-400" />
                         <div>
-                            <p class="text-sm font-medium text-amber-800 dark:text-amber-300">How this works</p>
-                            <p class="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
-                                When the master wins <strong>{{ $minConsecutiveWins }}</strong>
-                                {{ Str::plural('trade', $minConsecutiveWins) }} in a row, your account will
-                                automatically copy the next trade. The streak counter resets on any loss.
+                            <p class="text-sm font-medium text-amber-300">How pattern matching works</p>
+                            <p class="mt-0.5 text-xs text-amber-400">
+                                The bot reads the master's last <strong>{{ strlen($followerPattern) }}</strong> trade
+                                result{{ strlen($followerPattern) !== 1 ? 's' : '' }}. When they match
+                                <strong class="font-mono text-[#CDF12B]">{{ $followerPattern }}</strong>
+                                exactly, the next trade is copied. A <strong>1</strong> means the master must have won
+                                that trade; a <strong>0</strong> means a loss.
                             </p>
                         </div>
                     </div>
@@ -158,7 +227,7 @@
 
         @if($this->masters->isEmpty())
             <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-6 py-12 text-center">
-                <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
+                <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-800 p-4">
                     <flux:icon.user-group class="size-6 text-zinc-400" />
                 </div>
                 <flux:heading size="sm">No master accounts yet</flux:heading>
@@ -178,7 +247,7 @@
                             <div class="flex items-center gap-3">
                                 <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" />
                                 <div>
-                                    <p class="font-semibold text-zinc-900 dark:text-white">{{ $master->user->name }}</p>
+                                    <p class="font-semibold text-white">{{ $master->user->name }}</p>
                                     <p class="text-xs text-zinc-500">{{ $master->user->email }}</p>
                                 </div>
                             </div>
@@ -191,7 +260,7 @@
                         </div>
 
                         <p class="mb-4 text-sm text-zinc-500">
-                            <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ $master->followers_count }}</span>
+                            <span class="font-medium text-zinc-300">{{ $master->followers_count }}</span>
                             {{ Str::plural('follower', $master->followers_count) }}
                         </p>
 

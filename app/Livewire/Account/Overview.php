@@ -116,7 +116,8 @@ class Overview extends Component
 
     private function isDemo(array $account): bool
     {
-        return ($account['is_demo'] ?? $account['is_virtual'] ?? false) == true;
+        return ($account['is_demo'] ?? $account['is_virtual'] ?? false) == true
+            || ($account['account_type'] ?? '') === 'demo';
     }
 
     public function render(): View

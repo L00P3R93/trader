@@ -13,8 +13,8 @@ class DerivApiService
     /** New REST API — reliable, no WebSocket needed. */
     private const REST_BASE = 'https://api.derivws.com/trading/v1/options';
 
-    /** Legacy WebSocket API — for balance, trades, portfolio. */
-    private const WS_URL = 'wss://ws.binaryws.com/websockets/v3';
+    /** Authenticated WebSocket base — OTP appended at runtime. */
+    private const WS_BASE = 'wss://api.derivws.com/trading/v1/options';
 
     // ─── REST API ────────────────────────────────────────────────────────────
 
@@ -25,8 +25,12 @@ class DerivApiService
     public function getAccounts(DerivConnection $connection): array
     {
         return $this->cachedCall($connection, 'accounts', 3600, function () use ($connection) {
-            $response = Http::withHeaders($this->restHeaders($connection->access_token))
-                ->get(self::REST_BASE.'/accounts');
+            try {
+                $response = Http::withHeaders($this->restHeaders($connection->access_token))
+                    ->get(self::REST_BASE.'/accounts');
+            } catch (\Throwable $e) {
+                throw new DerivApiException('Deriv API unreachable: '.$e->getMessage());
+            }
 
             if ($response->status() === 401) {
                 throw new DerivApiException('Token expired or invalid. Please reconnect your Deriv account.');
@@ -37,7 +41,7 @@ class DerivApiService
                 throw new DerivApiException($msg);
             }
 
-            return $response->json() ?? [];
+            return $response->json('data') ?? [];
         });
     }
 
@@ -70,8 +74,12 @@ class DerivApiService
      */
     public function resetDemoBalance(DerivConnection $connection, string $accountId): void
     {
-        $response = Http::withHeaders($this->restHeaders($connection->access_token))
-            ->post(self::REST_BASE."/accounts/{$accountId}/reset-demo-balance");
+        try {
+            $response = Http::withHeaders($this->restHeaders($connection->access_token))
+                ->post(self::REST_BASE."/accounts/{$accountId}/reset-demo-balance");
+        } catch (\Throwable $e) {
+            throw new DerivApiException('Deriv API unreachable: '.$e->getMessage());
+        }
 
         if ($response->status() === 401) {
             throw new DerivApiException('Token expired or invalid. Please reconnect your Deriv account.');
@@ -132,6 +140,52 @@ class DerivApiService
         return $this->cachedCall($connection, 'portfolio', 30, fn () => $this->wsCall($connection->access_token, ['portfolio' => 1]));
     }
 
+    /**
+     * Buy a contract on behalf of a follower.
+     * Fetches a price proposal then immediately buys it.
+     *
+     * @param  array{contract_type: string, symbol: string, duration: int, duration_unit: string, stake: float, basis: string, app_markup_percentage: float}  $params
+     */
+    public function buyContract(DerivConnection $connection, array $params): array
+    {
+        return $this->wsSession($connection->access_token, function (Client $client) use ($params): array {
+            $this->wsSend($client, [
+                'proposal' => 1,
+                'amount' => $params['stake'],
+                'basis' => $params['basis'] ?? 'stake',
+                'contract_type' => $params['contract_type'],
+                'currency' => 'USD',
+                'duration' => $params['duration'],
+                'duration_unit' => $params['duration_unit'],
+                'symbol' => $params['symbol'],
+                'app_markup_percentage' => (float) ($params['app_markup_percentage'] ?? 0),
+                'req_id' => 1,
+            ]);
+
+            $proposal = $this->wsReceive($client);
+
+            if (isset($proposal['error'])) {
+                throw new DerivApiException($proposal['error']['message'] ?? 'Proposal request failed');
+            }
+
+            $proposalId = $proposal['proposal']['id'] ?? null;
+
+            if (! $proposalId) {
+                throw new DerivApiException('Proposal returned no ID — cannot place buy');
+            }
+
+            $this->wsSend($client, ['buy' => $proposalId, 'price' => $params['stake'], 'req_id' => 2]);
+
+            $buyResponse = $this->wsReceive($client);
+
+            if (isset($buyResponse['error'])) {
+                throw new DerivApiException($buyResponse['error']['message'] ?? 'Buy request failed');
+            }
+
+            return $buyResponse;
+        }, $params['follower_account_id'] ?? null);
+    }
+
     /** Flush all cached data for this connection. */
     public function clearCache(DerivConnection $connection): void
     {
@@ -165,12 +219,62 @@ class DerivApiService
         return Cache::remember("deriv:conn:{$connection->id}:{$key}", $ttl, $fn);
     }
 
-    private function wsCall(string $token, array $request): array
+    private function wsCall(string $token, array $request, ?string $accountId = null): array
     {
-        $url = self::WS_URL.'?app_id='.config('deriv.app_id');
+        return $this->wsSession($token, function (Client $client) use ($request): array {
+            $this->wsSend($client, $request);
+            $response = $this->wsReceive($client);
 
-        // Disable SSL peer verification — required on Windows where the
-        // PHP CA bundle may not trust binaryws.com's certificate chain.
+            if (isset($response['error'])) {
+                throw new DerivApiException($response['error']['message'] ?? 'API call failed');
+            }
+
+            return $response;
+        }, $accountId);
+    }
+
+    private function wsSession(string $token, callable $fn, ?string $accountId = null): array
+    {
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'Deriv-App-ID' => (string) config('deriv.app_id'),
+            'Accept' => 'application/json',
+        ];
+
+        if (! $accountId) {
+            try {
+                $accountsResp = Http::withHeaders($headers)->get(self::REST_BASE.'/accounts');
+            } catch (\Throwable $e) {
+                throw new DerivApiException('Deriv API unreachable: '.$e->getMessage());
+            }
+
+            if ($accountsResp->failed()) {
+                throw new DerivApiException($accountsResp->json('errors.0.message', 'Failed to retrieve accounts'));
+            }
+
+            $accountId = ($accountsResp->json('data') ?? [])[0]['account_id'] ?? null;
+
+            if (! $accountId) {
+                throw new DerivApiException('No Deriv account found — cannot open WebSocket session');
+            }
+        }
+
+        try {
+            $otpResp = Http::withHeaders($headers)->post(self::REST_BASE."/accounts/{$accountId}/otp");
+        } catch (\Throwable $e) {
+            throw new DerivApiException('Deriv API unreachable: '.$e->getMessage());
+        }
+
+        if ($otpResp->failed()) {
+            throw new DerivApiException($otpResp->json('errors.0.message', 'Failed to obtain WebSocket session token'));
+        }
+
+        $wsUrl = $otpResp->json('data.url');
+
+        if (! $wsUrl) {
+            throw new DerivApiException('OTP response contained no WebSocket URL');
+        }
+
         $context = stream_context_create([
             'ssl' => [
                 'verify_peer' => false,
@@ -179,30 +283,11 @@ class DerivApiService
         ]);
 
         try {
-            $client = new Client($url, [
-                'timeout' => 15,
-                'context' => $context,
-            ]);
-
-            // Authorize first
-            $this->wsSend($client, ['authorize' => $token]);
-            $auth = $this->wsReceive($client);
-
-            if (isset($auth['error'])) {
-                $client->close();
-                throw new DerivApiException($auth['error']['message'] ?? 'Authorization failed');
-            }
-
-            // Make the actual request
-            $this->wsSend($client, $request);
-            $response = $this->wsReceive($client);
+            $client = new Client($wsUrl, ['timeout' => 15, 'context' => $context]);
+            $result = $fn($client);
             $client->close();
 
-            if (isset($response['error'])) {
-                throw new DerivApiException($response['error']['message'] ?? 'API call failed');
-            }
-
-            return $response;
+            return $result;
         } catch (DerivApiException $e) {
             throw $e;
         } catch (\Throwable $e) {

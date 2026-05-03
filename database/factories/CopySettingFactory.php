@@ -19,7 +19,9 @@ class CopySettingFactory extends Factory
         return [
             'user_id' => User::factory(),
             'master_connection_id' => DerivConnection::factory()->state(['type' => 'master']),
-            'min_consecutive_wins' => fake()->numberBetween(1, 5),
+            'follower_pattern' => fake()->randomElement(['111', '101', '110', '11']),
+            'pattern_enabled' => true,
+            'stake' => fake()->randomFloat(2, 0.35, 10),
             'is_active' => true,
         ];
     }
