@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="48" viewBox="0 0 300 48">
+  <defs>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="0 0 0 0 0.804
+                0 0 0 0 0.945
+                0 0 0 0 0.169
+                0 0 0 0.35 0" result="shadow"/>
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Badge -->
+  <rect x="4" y="4" width="40" height="40" rx="9" fill="#CDF12B" filter="url(#glow)"/>
+
+  <!-- Bot icon (24×24 → scaled 1.167× and centered in badge) -->
+  <g transform="translate(10, 10) scale(1.167)">
+    <path fill="#0B1220" fill-rule="evenodd"
+          d="M11 1h2v4h-2z
+             M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z
+             M7 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0z
+             M13 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/>
+  </g>
+
+  <!-- Brand name -->
+  <text x="58" y="20"
+        font-family="system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+        font-size="15" font-weight="700" fill="#FFFFFF" letter-spacing="-0.2">
+    Fully Automated Bots
+  </text>
+  <!-- "CT" accent in brand yellow -->
+  <text x="58" y="38"
+        font-family="system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+        font-size="11" font-weight="600" fill="#CDF12B" letter-spacing="1.5">
+    COPY TRADING
+  </text>
+</svg>

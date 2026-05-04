@@ -95,7 +95,10 @@
       "Bash(Select-Object FullName)",
       "Bash(Select-Object -Property Name, LastWriteTime)",
       "Bash(Format-Table)",
-      "mcp__laravel-boost__list-routes"
+      "mcp__laravel-boost__list-routes",
+      "Bash(findstr APP_NAME)",
+      "Bash(powershell -Command \"\\(Get-Content .env\\) -replace '^APP_NAME=.*', 'APP_NAME=\\\\\"Fully Automated Bots CT\\\\\"' | Set-Content .env -Encoding utf8\")",
+      "Bash(Select-Object Name)"
     ]
   },
   "enableAllProjectMcpServers": true,

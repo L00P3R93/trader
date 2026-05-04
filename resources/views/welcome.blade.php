@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CopyTrade Pro — Copy the Best Traders. Automatically.</title>
-    <meta name="description" content="Connect your Deriv account, follow top traders, and let CopyTrade Pro mirror every trade in real time.">
+    <title>Fully Automated Bots CT — Copy the Best Traders. Automatically.</title>
+    <meta name="description" content="Connect your Deriv account, follow top traders, and let Fully Automated Bots CT mirror every trade in real time.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes float {
@@ -86,13 +86,8 @@
         <div class="flex items-center justify-between h-16">
 
             {{-- Logo --}}
-            <a href="/" class="flex items-center gap-2.5 flex-shrink-0">
-                <div class="w-8 h-8 rounded-lg bg-[#CDF12B] flex items-center justify-center shadow-lg shadow-[#CDF12B]/30">
-                    <svg class="w-4 h-4 text-[#0B1220]" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                    </svg>
-                </div>
-                <span class="text-base font-bold tracking-tight">CopyTrade Pro</span>
+            <a href="/" class="flex items-center flex-shrink-0">
+                <img src="/logo.svg" alt="Fully Automated Bots CT" class="h-9 w-auto">
             </a>
 
             {{-- Desktop nav links --}}
@@ -357,12 +352,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <p class="text-[#1E45FC] text-xs font-bold uppercase tracking-widest mb-3">About</p>
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">What is CopyTrade Pro?</h2>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">What is Fully Automated Bots CT?</h2>
         </div>
         <div class="grid lg:grid-cols-2 gap-12 xl:gap-20 items-start">
             <div class="space-y-5 text-zinc-400 text-base leading-relaxed">
                 <p>
-                    CopyTrade Pro is a fully automated copy trading platform that connects directly to
+                    Fully Automated Bots CT is a fully automated copy trading platform that connects directly to
                     <span class="text-white font-semibold">Deriv via official OAuth</span>.
                     No API key pasting, no third-party bridges — just a secure one-click authorization that links your Deriv account in seconds.
                 </p>
@@ -566,7 +561,7 @@
                 ],
                 [
                     'q' => 'What is Deriv?',
-                    'a' => "Deriv (formerly Binary.com) is a regulated online trading platform offering binary options, multipliers, and synthetic indices available 24/7. CopyTrade Pro is built directly on their official WebSocket API — no screen scraping, no unofficial methods, just a clean API integration.",
+                    'a' => "Deriv (formerly Binary.com) is a regulated online trading platform offering binary options, multipliers, and synthetic indices available 24/7. Fully Automated Bots CT is built directly on their official WebSocket API — no screen scraping, no unofficial methods, just a clean API integration.",
                 ],
             ] as $faq)
             <div x-data="{ open: false }" class="rounded-xl border border-[#1F2937] bg-[#0B1220]/40 overflow-hidden">
@@ -611,13 +606,8 @@
 
             {{-- Col 1: Brand --}}
             <div>
-                <div class="flex items-center gap-2.5 mb-4">
-                    <div class="w-8 h-8 rounded-lg bg-[#CDF12B] flex items-center justify-center shadow-sm shadow-[#CDF12B]/30">
-                        <svg class="w-4 h-4 text-[#0B1220]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                        </svg>
-                    </div>
-                    <span class="text-base font-bold">CopyTrade Pro</span>
+                <div class="mb-4">
+                    <img src="/logo.svg" alt="Fully Automated Bots CT" class="h-9 w-auto">
                 </div>
                 <p class="text-sm text-zinc-500 leading-relaxed mb-5">
                     The professional copy trading platform for Deriv traders. Automate your strategy, protect your capital.
@@ -654,7 +644,7 @@
                     Past performance of master traders is not indicative of future results.
                 </p>
                 <p class="text-xs text-zinc-600 leading-relaxed mt-3">
-                    CopyTrade Pro is a technology service only and does not provide investment advice.
+                    Fully Automated Bots CT is a technology service only and does not provide investment advice.
                     You are solely responsible for all trading decisions made through our platform.
                 </p>
                 <p class="text-xs text-zinc-700 leading-relaxed mt-3">
@@ -665,7 +655,7 @@
 
         {{-- Bottom bar --}}
         <div class="mt-12 pt-6 border-t border-[#1F2937]/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p class="text-xs text-zinc-600">© {{ date('Y') }} CopyTrade Pro. All rights reserved.</p>
+            <p class="text-xs text-zinc-600">© {{ date('Y') }} Fully Automated Bots CT. All rights reserved.</p>
             <p class="text-xs text-zinc-700">Not affiliated with Deriv.com</p>
         </div>
     </div>
