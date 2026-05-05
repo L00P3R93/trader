@@ -151,6 +151,8 @@
 
         {{ $slot }}
 
+        <livewire:onboarding.tutorial />
+
         @fluxScripts
     </body>
 </html>
