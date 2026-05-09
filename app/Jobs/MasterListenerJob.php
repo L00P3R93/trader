@@ -165,11 +165,16 @@ class MasterListenerJob implements ShouldQueue
 
             $contract = $message['proposal_open_contract'] ?? [];
 
+            Log::debug('MasterListenerJob: proposal_open_contract', array_intersect_key($contract, array_flip([
+                'contract_type', 'underlying', 'duration', 'duration_unit', 'barrier', 'last_digit',
+            ])));
+
             $enriched = array_merge($baseTrade, [
                 'duration' => $contract['duration'] ?? 1,
                 'duration_unit' => $contract['duration_unit'] ?? 't',
                 'contract_type' => $contract['contract_type'] ?? ($baseTrade['contract_type'] ?? 'CALL'),
                 'symbol' => $contract['underlying'] ?? $baseTrade['symbol'] ?? $baseTrade['underlying'] ?? 'R_50',
+                'barrier' => $contract['barrier'] ?? $contract['last_digit'] ?? $baseTrade['barrier'] ?? null,
             ]);
 
             Log::info("MasterListenerJob: dispatching CopyTradeJob for connection #{$this->connectionId}");
