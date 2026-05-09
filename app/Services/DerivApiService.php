@@ -6,6 +6,7 @@ use App\Exceptions\DerivApiException;
 use App\Models\DerivConnection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use WebSocket\Client;
 
 class DerivApiService
@@ -164,6 +165,8 @@ class DerivApiService
             if (isset($params['barrier']) && str_starts_with($params['contract_type'], 'DIGIT')) {
                 $proposal['last_digit'] = (int) $params['barrier'];
             }
+
+            Log::debug('buyContract proposal', $proposal);
 
             $this->wsSend($client, $proposal);
 

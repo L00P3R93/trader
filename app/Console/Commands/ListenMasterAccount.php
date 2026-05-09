@@ -190,12 +190,16 @@ class ListenMasterAccount extends Command
             $contract = $message['proposal_open_contract'] ?? [];
 
             // Enrich the original transaction data with duration from the contract
+            Log::debug('proposal_open_contract response', array_intersect_key($contract, array_flip([
+                'contract_type', 'underlying', 'duration', 'duration_unit', 'barrier', 'last_digit',
+            ])));
+
             $enriched = array_merge($baseTrade, [
                 'duration' => $contract['duration'] ?? 1,
                 'duration_unit' => $contract['duration_unit'] ?? 't',
                 'contract_type' => $contract['contract_type'] ?? ($baseTrade['contract_type'] ?? 'CALL'),
                 'symbol' => $contract['underlying'] ?? $baseTrade['symbol'] ?? $baseTrade['underlying'] ?? 'R_50',
-                'barrier' => $contract['barrier'] ?? $baseTrade['barrier'] ?? null,
+                'barrier' => $contract['barrier'] ?? $contract['last_digit'] ?? $baseTrade['barrier'] ?? null,
             ]);
 
             $this->info('Contract details fetched — dispatching copy trade job.');
