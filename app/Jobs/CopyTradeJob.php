@@ -73,6 +73,7 @@ class CopyTradeJob implements ShouldQueue
                     'duration_unit' => $this->masterTrade['duration_unit'] ?? 't',
                     'stake' => $stake,
                     'basis' => 'stake',
+                    'barrier' => $this->masterTrade['barrier'] ?? null,
                     'follower_account_id' => $setting->follower_account_id,
                 ]);
 

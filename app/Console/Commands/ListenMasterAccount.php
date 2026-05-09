@@ -195,6 +195,7 @@ class ListenMasterAccount extends Command
                 'duration_unit' => $contract['duration_unit'] ?? 't',
                 'contract_type' => $contract['contract_type'] ?? ($baseTrade['contract_type'] ?? 'CALL'),
                 'symbol' => $contract['underlying'] ?? $baseTrade['symbol'] ?? $baseTrade['underlying'] ?? 'R_50',
+                'barrier' => $contract['barrier'] ?? $baseTrade['barrier'] ?? null,
             ]);
 
             $this->info('Contract details fetched — dispatching copy trade job.');

@@ -149,7 +149,7 @@ class DerivApiService
     public function buyContract(DerivConnection $connection, array $params): array
     {
         return $this->wsSession($connection->access_token, function (Client $client) use ($params): array {
-            $this->wsSend($client, [
+            $proposal = [
                 'proposal' => 1,
                 'amount' => $params['stake'],
                 'basis' => $params['basis'] ?? 'stake',
@@ -159,7 +159,13 @@ class DerivApiService
                 'duration_unit' => $params['duration_unit'],
                 'underlying_symbol' => $params['symbol'],
                 'req_id' => 1,
-            ]);
+            ];
+
+            if (isset($params['barrier']) && str_starts_with($params['contract_type'], 'DIGIT')) {
+                $proposal['last_digit'] = (int) $params['barrier'];
+            }
+
+            $this->wsSend($client, $proposal);
 
             $proposal = $this->wsReceive($client);
 
