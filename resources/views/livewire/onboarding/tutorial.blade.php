@@ -69,17 +69,40 @@
                         </div>
                     @endif
 
-                    {{-- Optional Action --}}
-                    @if(isset($step['action_label'], $step['action_route']))
-                        <div class="mb-6 text-center">
-                            <flux:button
-                                href="{{ route($step['action_route']) }}"
-                                variant="primary"
-                                size="sm"
-                                icon="arrow-right"
-                            >
-                                {{ $step['action_label'] }}
-                            </flux:button>
+                    {{-- Optional Actions --}}
+                    @if(isset($step['action_label']))
+                        <div class="mb-6 flex flex-wrap items-center justify-center gap-2">
+                            @if(isset($step['action_url']))
+                                <flux:button
+                                    href="{{ $step['action_url'] }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    variant="primary"
+                                    size="sm"
+                                    icon-trailing="arrow-top-right-on-square"
+                                >
+                                    {{ $step['action_label'] }}
+                                </flux:button>
+                            @elseif(isset($step['action_route']))
+                                <flux:button
+                                    href="{{ route($step['action_route']) }}"
+                                    variant="primary"
+                                    size="sm"
+                                    icon-trailing="arrow-right"
+                                >
+                                    {{ $step['action_label'] }}
+                                </flux:button>
+                            @endif
+
+                            @if(isset($step['action_secondary_label'], $step['action_route']))
+                                <flux:button
+                                    href="{{ route($step['action_route']) }}"
+                                    variant="ghost"
+                                    size="sm"
+                                >
+                                    {{ $step['action_secondary_label'] }}
+                                </flux:button>
+                            @endif
                         </div>
                     @endif
                 </div>

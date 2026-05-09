@@ -338,7 +338,7 @@
 
         {{-- ===== EXPANDABLE SETTINGS PANEL ===== --}}
         @if($settingsOpen)
-        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]" x-data="{ moreSettings: false }">
             <div class="flex items-center justify-between border-b border-[#1F2937] px-6 py-4">
                 <flux:heading size="lg">Trade Settings</flux:heading>
                 <flux:button wire:click="$toggle('settingsOpen')" size="sm" variant="ghost" icon="x-mark" />
@@ -537,92 +537,112 @@
                     @endif
                 </div>
 
-                {{-- Stake --}}
-                <div>
-                    <flux:input wire:model="stake" label="Default Stake (USD)" type="number" step="0.01" min="0.35" max="50000" />
-                    <flux:checkbox wire:model="followMasterStake" label="Follow Master Stake" class="mt-2" />
-                    @error('stake') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                {{-- More Settings toggle --}}
+                <div class="col-span-full border-t border-[#1F2937] pt-2">
+                    <button
+                        @click="moreSettings = !moreSettings"
+                        class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-[#111827] hover:text-white"
+                    >
+                        <span x-text="moreSettings ? 'Hide Advanced Settings' : 'More Settings'"></span>
+                        <svg x-bind:class="moreSettings ? 'rotate-180' : ''" class="size-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7" />
+                        </svg>
+                    </button>
                 </div>
 
-                {{-- Martingale & TP/SL --}}
-                <div class="space-y-2">
-                    <flux:input wire:model="stakeMultiplier" label="Stake Multiplier ×" type="number" step="0.1" min="1" max="100" />
-                    <div class="grid grid-cols-2 gap-2">
-                        <flux:input wire:model="takeProfit" label="Take Profit" type="number" min="0" placeholder="—" />
-                        <flux:input wire:model="stopLoss" label="Stop Loss" type="number" min="0" placeholder="—" />
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <flux:input wire:model="doMartingaleAt" label="Do Martingale at" type="number" min="1" />
-                        <flux:input wire:model="maxMartingale" label="Max Martingale" type="number" min="0" />
-                    </div>
-                    <flux:input wire:model="maxCompound" label="Max Compound" type="number" min="0" />
-                    <div>
-                        <flux:label>If Hit Max Martingale</flux:label>
-                        <flux:select wire:model="ifHitMaxMartingale" size="sm">
-                            <flux:select.option value="stop">Stop</flux:select.option>
-                            <flux:select.option value="continue">Continue</flux:select.option>
-                        </flux:select>
-                    </div>
-                </div>
+                {{-- Collapsible advanced settings --}}
+                <div class="col-span-full" x-show="moreSettings" x-collapse>
+                    <div class="grid grid-cols-1 gap-6 pt-2 md:grid-cols-2 xl:grid-cols-3">
 
-                {{-- Options --}}
-                <div class="space-y-3">
-                    <flux:checkbox wire:model="safeMode" label="Safe Mode" />
-                    <div>
-                        <flux:label>Wait for Loss</flux:label>
-                        <flux:input wire:model="waitForLoss" type="number" min="0" class="mt-1 w-24" />
-                    </div>
-                    <flux:checkbox wire:model="onlyUse1xWaitForLoss" label="Only Use 1× Wait for Loss" />
-                </div>
+                        {{-- Stake --}}
+                        <div>
+                            <flux:input wire:model="stake" label="Default Stake (USD)" type="number" step="0.01" min="0.35" max="50000" />
+                            <flux:checkbox wire:model="followMasterStake" label="Follow Master Stake" class="mt-2" />
+                            @error('stake') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
 
-                {{-- Filter Indices Market --}}
-                <div>
-                    <flux:label class="mb-2 block">Filter Indices Market</flux:label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach(self::AVAILABLE_MARKETS as $market)
-                            <button wire:click="toggleMarket('{{ $market }}')"
-                                @class([
-                                    'rounded px-2 py-1 text-xs font-medium transition-colors',
-                                    'bg-[#1E45FC] text-white' => in_array($market, $filterMarkets),
-                                    'bg-[#111827] text-zinc-400 hover:bg-[#1F2937]' => !in_array($market, $filterMarkets),
-                                ])>
-                                {{ $market }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
+                        {{-- Martingale & TP/SL --}}
+                        <div class="space-y-2">
+                            <flux:input wire:model="stakeMultiplier" label="Stake Multiplier ×" type="number" step="0.1" min="1" max="100" />
+                            <div class="grid grid-cols-2 gap-2">
+                                <flux:input wire:model="takeProfit" label="Take Profit" type="number" min="0" placeholder="—" />
+                                <flux:input wire:model="stopLoss" label="Stop Loss" type="number" min="0" placeholder="—" />
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <flux:input wire:model="doMartingaleAt" label="Do Martingale at" type="number" min="1" />
+                                <flux:input wire:model="maxMartingale" label="Max Martingale" type="number" min="0" />
+                            </div>
+                            <flux:input wire:model="maxCompound" label="Max Compound" type="number" min="0" />
+                            <div>
+                                <flux:label>If Hit Max Martingale</flux:label>
+                                <flux:select wire:model="ifHitMaxMartingale" size="sm">
+                                    <flux:select.option value="stop">Stop</flux:select.option>
+                                    <flux:select.option value="continue">Continue</flux:select.option>
+                                </flux:select>
+                            </div>
+                        </div>
 
-                {{-- Synthetic Indices --}}
-                <div>
-                    <flux:label class="mb-2 block">Synthetic Indices</flux:label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach(self::AVAILABLE_SYNTHETIC as $index)
-                            <button wire:click="toggleSynthetic('{{ $index }}')"
-                                @class([
-                                    'rounded px-2 py-1 text-xs font-medium transition-colors',
-                                    'bg-[#1E45FC] text-white' => in_array($index, $syntheticIndices),
-                                    'bg-[#111827] text-zinc-400 hover:bg-[#1F2937]' => !in_array($index, $syntheticIndices),
-                                ])>
-                                {{ $index }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
+                        {{-- Options --}}
+                        <div class="space-y-3">
+                            <flux:checkbox wire:model="safeMode" label="Safe Mode" />
+                            <div>
+                                <flux:label>Wait for Loss</flux:label>
+                                <flux:input wire:model="waitForLoss" type="number" min="0" class="mt-1 w-24" />
+                            </div>
+                            <flux:checkbox wire:model="onlyUse1xWaitForLoss" label="Only Use 1× Wait for Loss" />
+                        </div>
 
-                {{-- Forex Pairs --}}
-                <div>
-                    <flux:label class="mb-2 block">Forex Pairs</flux:label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach(self::AVAILABLE_FOREX as $pair)
-                            <button wire:click="toggleForex('{{ $pair }}')"
-                                @class([
-                                    'rounded px-2 py-1 text-xs font-medium transition-colors',
-                                    'bg-[#1E45FC] text-white' => in_array($pair, $forexPairs),
-                                    'bg-[#111827] text-zinc-400 hover:bg-[#1F2937]' => !in_array($pair, $forexPairs),
-                                ])>
-                                {{ $pair }}
-                            </button>
-                        @endforeach
+                        {{-- Filter Indices Market --}}
+                        <div>
+                            <flux:label class="mb-2 block">Filter Indices Market</flux:label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach(self::AVAILABLE_MARKETS as $market)
+                                    <button wire:click="toggleMarket('{{ $market }}')"
+                                        @class([
+                                            'rounded px-2 py-1 text-xs font-medium transition-colors',
+                                            'bg-[#1E45FC] text-white' => in_array($market, $filterMarkets),
+                                            'bg-[#111827] text-zinc-400 hover:bg-[#1F2937]' => !in_array($market, $filterMarkets),
+                                        ])>
+                                        {{ $market }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Synthetic Indices --}}
+                        <div>
+                            <flux:label class="mb-2 block">Synthetic Indices</flux:label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach(self::AVAILABLE_SYNTHETIC as $index)
+                                    <button wire:click="toggleSynthetic('{{ $index }}')"
+                                        @class([
+                                            'rounded px-2 py-1 text-xs font-medium transition-colors',
+                                            'bg-[#1E45FC] text-white' => in_array($index, $syntheticIndices),
+                                            'bg-[#111827] text-zinc-400 hover:bg-[#1F2937]' => !in_array($index, $syntheticIndices),
+                                        ])>
+                                        {{ $index }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Forex Pairs --}}
+                        <div>
+                            <flux:label class="mb-2 block">Forex Pairs</flux:label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach(self::AVAILABLE_FOREX as $pair)
+                                    <button wire:click="toggleForex('{{ $pair }}')"
+                                        @class([
+                                            'rounded px-2 py-1 text-xs font-medium transition-colors',
+                                            'bg-[#1E45FC] text-white' => in_array($pair, $forexPairs),
+                                            'bg-[#111827] text-zinc-400 hover:bg-[#1F2937]' => !in_array($pair, $forexPairs),
+                                        ])>
+                                        {{ $pair }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
