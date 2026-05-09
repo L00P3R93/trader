@@ -113,6 +113,21 @@ test('skips follower with inactive settings', function () use ($masterTrade) {
     $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
 });
 
+test('allows copy when pattern is enabled but no trade history exists yet', function () use ($masterTrade) {
+    $master = makeMaster();
+    makeFollower($master, [
+        'pattern_enabled' => true,
+        'follower_pattern' => '11',
+    ]);
+
+    $mock = $this->mock(DerivApiService::class);
+    $mock->shouldReceive('buyContract')->once()->andReturn(['buy' => ['transaction_id' => 1]]);
+
+    CopyTradeJob::dispatchSync($master->id, $masterTrade);
+
+    $this->assertDatabaseHas('copy_trades', ['master_connection_id' => $master->id]);
+});
+
 test('skips follower when pattern does not match', function () use ($masterTrade) {
     $master = makeMaster();
     $setting = makeFollower($master, [
