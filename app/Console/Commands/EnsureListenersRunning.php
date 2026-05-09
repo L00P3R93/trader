@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Jobs\MasterListenerJob;
+use App\Models\CopySetting;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
+
+class EnsureListenersRunning extends Command
+{
+    protected $signature = 'deriv:ensure-listeners';
+
+    protected $description = 'Start a MasterListenerJob for any active copy session that has no live listener';
+
+    public function handle(): int
+    {
+        $activeConnectionIds = CopySetting::query()
+            ->where('is_running', true)
+            ->distinct()
+            ->pluck('master_connection_id');
+
+        foreach ($activeConnectionIds as $connectionId) {
+            $heartbeat = Cache::get(MasterListenerJob::heartbeatKey($connectionId));
+
+            if ($heartbeat !== null) {
+                $this->line("Listener for connection #{$connectionId} is alive (last heartbeat: {$heartbeat}).");
+
+                continue;
+            }
+
+            $this->warn("No live listener for connection #{$connectionId} — dispatching MasterListenerJob.");
+            MasterListenerJob::dispatch($connectionId);
+        }
+
+        if ($activeConnectionIds->isEmpty()) {
+            $this->line('No active copy sessions found.');
+        }
+
+        return self::SUCCESS;
+    }
+}

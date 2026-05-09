@@ -73,6 +73,18 @@ return [
             'after_commit' => false,
         ],
 
+        // Dedicated connection for long-running listener jobs.
+        // retry_after = 86400 (24 h) prevents the job from being re-queued
+        // while it is still running its WebSocket loop.
+        'listener' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => 'listener',
+            'retry_after' => 86400,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],

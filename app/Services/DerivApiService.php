@@ -186,6 +186,33 @@ class DerivApiService
         }, $params['follower_account_id'] ?? null);
     }
 
+    /**
+     * Obtain a pre-authenticated WebSocket URL (OTP) for a specific account.
+     * The returned URL requires no further authorization — just connect and send messages.
+     */
+    public function getOtpUrl(DerivConnection $connection, string $accountId): string
+    {
+        $headers = $this->restHeaders($connection->access_token);
+
+        try {
+            $otpResp = Http::withHeaders($headers)->post(self::REST_BASE."/accounts/{$accountId}/otp");
+        } catch (\Throwable $e) {
+            throw new DerivApiException('Deriv API unreachable: '.$e->getMessage());
+        }
+
+        if ($otpResp->failed()) {
+            throw new DerivApiException($otpResp->json('errors.0.message', 'Failed to obtain WebSocket session token'));
+        }
+
+        $wsUrl = $otpResp->json('data.url');
+
+        if (! $wsUrl) {
+            throw new DerivApiException('OTP response contained no WebSocket URL');
+        }
+
+        return $wsUrl;
+    }
+
     /** Flush all cached data for this connection. */
     public function clearCache(DerivConnection $connection): void
     {

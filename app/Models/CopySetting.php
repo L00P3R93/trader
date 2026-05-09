@@ -15,6 +15,7 @@ class CopySetting extends Model
     protected $fillable = [
         'user_id',
         'master_connection_id',
+        'master_account_id',
         'follower_account_id',
         'follower_pattern',
         'pattern_enabled',

@@ -3,11 +3,13 @@
 namespace App\Livewire\CopyTrading;
 
 use App\Exceptions\DerivApiException;
+use App\Jobs\MasterListenerJob;
 use App\Models\CopySetting;
 use App\Models\CopyTrade;
 use App\Models\DerivConnection;
 use App\Services\DerivApiService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -24,8 +26,14 @@ class Dashboard extends Component
 
     public bool $showMasterList = false;
 
+    /** Whether the user is configuring self-copy (their own account as master). */
+    public bool $selfCopyMode = false;
+
     // -- Master selection --
     public ?int $selectedMasterId = null;
+
+    /** The specific Deriv account ID to listen on as master (used in self-copy mode). */
+    public ?string $masterAccountId = null;
 
     // -- Settings form properties --
     public float $stake = 1.00;
@@ -85,6 +93,7 @@ class Dashboard extends Component
         }
 
         $this->selectedMasterId = $setting->master_connection_id;
+        $this->masterAccountId = $setting->master_account_id;
         $this->stake = (float) ($setting->stake ?? 1.00);
         $this->followMasterStake = $setting->follow_master_stake ?? false;
         $this->safeMode = $setting->safe_mode ?? false;
@@ -104,12 +113,34 @@ class Dashboard extends Component
         $this->forexPairs = $setting->forex_pairs ?? [];
         $this->followerAccountId = $setting->follower_account_id;
         $this->paused = ! ($setting->is_active ?? true);
+
+        // Detect if this is a self-copy setup (master connection belongs to current user)
+        $ownConnection = auth()->user()->derivConnection;
+        if ($ownConnection && $setting->master_connection_id === $ownConnection->id) {
+            $this->selfCopyMode = true;
+        }
     }
 
     // ---- Pre-follow flow ----
 
+    public function enterSelfCopyMode(): void
+    {
+        $ownConnection = auth()->user()->derivConnection;
+
+        if (! $ownConnection) {
+            return;
+        }
+
+        $this->selfCopyMode = true;
+        $this->selectedMasterId = $ownConnection->id;
+        $this->showForm = true;
+        $this->showMasterList = false;
+    }
+
     public function selectMaster(int $connectionId): void
     {
+        $this->selfCopyMode = false;
+        $this->masterAccountId = null;
         $this->selectedMasterId = $connectionId;
         $this->showForm = true;
         $this->showMasterList = false;
@@ -117,13 +148,34 @@ class Dashboard extends Component
 
     public function switchMaster(int $connectionId): void
     {
-        $master = DerivConnection::where('id', $connectionId)
-            ->where('type', 'master')
-            ->firstOrFail();
+        $master = DerivConnection::findOrFail($connectionId);
 
-        auth()->user()->copySetting?->update(['master_connection_id' => $master->id]);
+        auth()->user()->copySetting?->update([
+            'master_connection_id' => $master->id,
+            'master_account_id' => null,
+        ]);
 
         $this->selectedMasterId = $connectionId;
+        $this->masterAccountId = null;
+        $this->selfCopyMode = false;
+        $this->showMasterList = false;
+    }
+
+    public function switchToSelfCopy(): void
+    {
+        $ownConnection = auth()->user()->derivConnection;
+
+        if (! $ownConnection) {
+            return;
+        }
+
+        auth()->user()->copySetting?->update([
+            'master_connection_id' => $ownConnection->id,
+            'master_account_id' => $this->masterAccountId,
+        ]);
+
+        $this->selectedMasterId = $ownConnection->id;
+        $this->selfCopyMode = true;
         $this->showMasterList = false;
     }
 
@@ -132,11 +184,13 @@ class Dashboard extends Component
         $setting = auth()->user()->copySetting;
 
         $this->selectedMasterId = $setting?->master_connection_id;
+        $this->masterAccountId = $setting?->master_account_id;
         $this->followerPattern = $setting?->follower_pattern ?? '111';
         $this->patternEnabled = $setting?->pattern_enabled ?? true;
         $this->followerAccountId = $setting?->follower_account_id;
         $this->showForm = false;
         $this->showMasterList = false;
+        $this->selfCopyMode = false;
     }
 
     public function follow(): void
@@ -147,22 +201,23 @@ class Dashboard extends Component
             'patternEnabled' => ['boolean'],
         ];
 
-        $validAccountIds = array_column($this->followerAccounts, 'account_id');
+        $validAccountIds = array_column($this->myAccounts, 'account_id');
 
         if (! empty($validAccountIds)) {
             $rules['followerAccountId'] = ['required', 'in:'.implode(',', $validAccountIds)];
         }
 
-        $this->validate($rules);
+        if ($this->selfCopyMode) {
+            $rules['masterAccountId'] = ['required', 'in:'.implode(',', $validAccountIds)];
+        }
 
-        $master = DerivConnection::where('id', $this->selectedMasterId)
-            ->where('type', 'master')
-            ->firstOrFail();
+        $this->validate($rules);
 
         CopySetting::updateOrCreate(
             ['user_id' => auth()->id()],
             [
-                'master_connection_id' => $master->id,
+                'master_connection_id' => $this->selectedMasterId,
+                'master_account_id' => $this->selfCopyMode ? $this->masterAccountId : null,
                 'follower_pattern' => $this->followerPattern,
                 'pattern_enabled' => $this->patternEnabled,
                 'follower_account_id' => $this->followerAccountId ?: null,
@@ -180,11 +235,13 @@ class Dashboard extends Component
         auth()->user()->copySetting?->delete();
 
         $this->selectedMasterId = null;
+        $this->masterAccountId = null;
         $this->followerPattern = '111';
         $this->patternEnabled = true;
         $this->followerAccountId = null;
         $this->showForm = false;
         $this->showMasterList = false;
+        $this->selfCopyMode = false;
         $this->paused = false;
 
         session()->flash('success', 'Copy trading disconnected.');
@@ -210,13 +267,18 @@ class Dashboard extends Component
             return;
         }
 
-        $validAccountIds = array_column($this->followerAccounts, 'account_id');
+        $validAccountIds = array_column($this->myAccounts, 'account_id');
 
         if (! empty($validAccountIds) && $this->followerAccountId) {
             $this->validate(['followerAccountId' => ['nullable', 'in:'.implode(',', $validAccountIds)]]);
         }
 
+        if ($this->selfCopyMode && ! empty($validAccountIds) && $this->masterAccountId) {
+            $this->validate(['masterAccountId' => ['nullable', 'in:'.implode(',', $validAccountIds)]]);
+        }
+
         $setting->update([
+            'master_account_id' => $this->selfCopyMode ? ($this->masterAccountId ?: null) : null,
             'stake' => $this->stake,
             'follow_master_stake' => $this->followMasterStake,
             'safe_mode' => $this->safeMode,
@@ -264,12 +326,29 @@ class Dashboard extends Component
             'is_active' => true,
         ]);
 
+        // Dispatch the listener immediately; EnsureListenersRunning will restart
+        // it within 1 minute if the queue worker isn't available yet.
+        if (! Cache::has(MasterListenerJob::heartbeatKey($setting->master_connection_id))) {
+            MasterListenerJob::dispatch($setting->master_connection_id);
+        }
+
         $this->paused = false;
     }
 
     public function stopBot(): void
     {
-        auth()->user()->copySetting?->update(['is_running' => false]);
+        $setting = auth()->user()->copySetting;
+
+        if (! $setting) {
+            return;
+        }
+
+        $setting->update(['is_running' => false]);
+
+        // Clear heartbeat so EnsureListenersRunning does not restart the listener.
+        // The running job will notice is_running=false on its next 30-second ping
+        // cycle and exit cleanly on its own.
+        Cache::forget(MasterListenerJob::heartbeatKey($setting->master_connection_id));
     }
 
     public function pauseBot(): void
@@ -385,8 +464,9 @@ class Dashboard extends Component
         ];
     }
 
+    /** All accounts for the current user — used for both master and follower selectors. */
     #[Computed]
-    public function followerAccounts(): array
+    public function myAccounts(): array
     {
         $connection = auth()->user()->derivConnection;
 
@@ -417,6 +497,19 @@ class Dashboard extends Component
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /** Whether the background listener is currently alive (has a fresh heartbeat). */
+    #[Computed]
+    public function listenerAlive(): bool
+    {
+        $setting = $this->setting;
+
+        if (! $setting?->master_connection_id) {
+            return false;
+        }
+
+        return Cache::has(MasterListenerJob::heartbeatKey($setting->master_connection_id));
     }
 
     public function render(): View

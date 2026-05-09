@@ -64,9 +64,11 @@ class CopyTradeJob implements ShouldQueue
                 : $setting->stake;
 
             try {
+                $symbol = $this->masterTrade['symbol'] ?? $this->masterTrade['underlying'] ?? 'R_50';
+
                 $result = $deriv->buyContract($followerConnection, [
                     'contract_type' => $this->masterTrade['contract_type'] ?? 'CALL',
-                    'symbol' => $this->masterTrade['underlying'] ?? 'R_50',
+                    'symbol' => $symbol,
                     'duration' => $this->masterTrade['duration'] ?? 1,
                     'duration_unit' => $this->masterTrade['duration_unit'] ?? 't',
                     'stake' => $stake,
@@ -80,7 +82,7 @@ class CopyTradeJob implements ShouldQueue
                     'master_connection_id' => $this->masterConnectionId,
                     'follower_trx_id' => $result['buy']['transaction_id'] ?? null,
                     'master_trx_id' => $this->masterTrade['transaction_id'] ?? null,
-                    'symbol' => $this->masterTrade['underlying'] ?? null,
+                    'symbol' => $symbol,
                     'contract_type' => $this->masterTrade['contract_type'] ?? null,
                     'duration' => ($this->masterTrade['duration'] ?? '').($this->masterTrade['duration_unit'] ?? ''),
                     'barrier' => $this->masterTrade['contract_type'] ?? null,

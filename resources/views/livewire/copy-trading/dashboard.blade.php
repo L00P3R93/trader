@@ -24,22 +24,79 @@
                     <div>
                         <flux:heading size="lg">Configure Copy Settings</flux:heading>
                         <flux:text class="mt-0.5 text-sm text-zinc-500">
-                            Following: <span class="font-medium text-white">{{ $master?->user->name }}</span>
+                            @if($selfCopyMode)
+                                Self-copy: trading your own accounts
+                            @else
+                                Following: <span class="font-medium text-white">{{ $master?->user->name }}</span>
+                            @endif
                         </flux:text>
                     </div>
                 </div>
 
                 <div class="space-y-5 px-6 py-5">
 
-                    {{-- Follower account selector --}}
-                    @if(count($this->followerAccounts) > 0)
+                    {{-- Self-copy: master account selector --}}
+                    @if($selfCopyMode && count($this->myAccounts) > 0)
                         <div>
-                            <flux:label>Your Trading Account</flux:label>
-                            <flux:text class="mb-3 text-xs text-zinc-500">Choose which account (real or demo) will copy trades.</flux:text>
+                            <flux:label>Master Account <span class="text-amber-400">(trades to copy FROM)</span></flux:label>
+                            <flux:text class="mb-3 text-xs text-zinc-500">Choose which of your accounts to copy trades from.</flux:text>
                             <div class="space-y-2">
-                                @foreach($this->followerAccounts as $account)
+                                @foreach($this->myAccounts as $account)
                                     @php
-                                        $isDemo = ($account['account_type'] ?? '') === 'demo';
+                                        $isDemo = ($account['is_demo'] ?? false) || ($account['account_type'] ?? '') === 'demo';
+                                        $accLabel = ($isDemo ? 'Demo' : 'Real') . ' — ' . $account['account_id'];
+                                        $accSub = number_format($account['balance'] ?? 0, 2) . ' ' . strtoupper($account['currency'] ?? 'USD');
+                                    @endphp
+                                    <label wire:key="master-acc-{{ $account['account_id'] }}"
+                                        class="flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-colors
+                                            {{ $masterAccountId === $account['account_id']
+                                                ? 'border-amber-500/50 bg-amber-500/5'
+                                                : 'border-[#1F2937] bg-[#111827] hover:border-[#1F2937]/80' }}"
+                                    >
+                                        <input type="radio" wire:model.live="masterAccountId" value="{{ $account['account_id'] }}"
+                                            class="text-amber-400 focus:ring-amber-400" />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm font-medium text-white">{{ $accLabel }}</span>
+                                                <span @class([
+                                                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                                    'bg-amber-500/10 text-amber-400' => $isDemo,
+                                                    'bg-[#22C55E]/10 text-[#22C55E]' => !$isDemo,
+                                                ])>{{ $isDemo ? 'Demo' : 'Real' }}</span>
+                                                <span class="inline-flex items-center rounded-full bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-400">MASTER</span>
+                                            </div>
+                                            <p class="mt-0.5 text-xs text-zinc-500">Balance: {{ $accSub }}</p>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('masterAccountId')
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
+
+                    {{-- Follower account selector --}}
+                    @if(count($this->myAccounts) > 0)
+                        <div>
+                            <flux:label>
+                                @if($selfCopyMode)
+                                    Follower Account <span class="text-[#1E45FC]">(trades to copy TO)</span>
+                                @else
+                                    Your Trading Account
+                                @endif
+                            </flux:label>
+                            <flux:text class="mb-3 text-xs text-zinc-500">
+                                @if($selfCopyMode)
+                                    Choose which account will receive copied trades.
+                                @else
+                                    Choose which account (real or demo) will copy trades.
+                                @endif
+                            </flux:text>
+                            <div class="space-y-2">
+                                @foreach($this->myAccounts as $account)
+                                    @php
+                                        $isDemo = ($account['is_demo'] ?? false) || ($account['account_type'] ?? '') === 'demo';
                                         $accLabel = ($isDemo ? 'Demo' : 'Real') . ' — ' . $account['account_id'];
                                         $accSub = number_format($account['balance'] ?? 0, 2) . ' ' . strtoupper($account['currency'] ?? 'USD');
                                     @endphp
@@ -121,47 +178,76 @@
             </div>
         @endif
 
-        {{-- ---- Available Masters ---- --}}
+        {{-- ---- Available Masters + Self-copy option ---- --}}
         <div>
             @if(! $showForm)
                 <div class="mb-4">
-                    <flux:heading size="lg">Available Masters</flux:heading>
-                    <flux:text class="text-sm text-zinc-500">Select a master account to start copying their trades.</flux:text>
+                    <flux:heading size="lg">Copy Trading Setup</flux:heading>
+                    <flux:text class="text-sm text-zinc-500">Follow a platform master or use your own accounts.</flux:text>
                 </div>
             @endif
 
-            @if($this->masters->isEmpty())
-                <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-6 py-12 text-center">
-                    <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-800 p-4">
-                        <flux:icon.user-group class="size-6 text-zinc-400" />
+            {{-- Self-copy card --}}
+            @php $ownConnection = auth()->user()->derivConnection; @endphp
+            @if($ownConnection && !$showForm)
+                <div class="mb-6">
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Self-Copy (Your Accounts)</p>
+                    <div class="rounded-xl border border-amber-800/40 bg-[#0B1220] p-5 hover:border-amber-500/40 transition-colors">
+                        <div class="mb-3 flex items-start gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-900/40">
+                                <flux:icon.arrows-right-left class="size-5 text-amber-400" />
+                            </div>
+                            <div>
+                                <p class="font-semibold text-white">Use My Own Account</p>
+                                <p class="text-xs text-zinc-500">Copy trades between your own Deriv accounts — e.g. demo → real, or demo → demo.</p>
+                            </div>
+                        </div>
+                        <div class="mb-4 rounded-lg bg-amber-900/10 px-4 py-3 text-xs text-amber-300/80">
+                            You can set any of your accounts (demo or real) as the master, and copy trades into any other account.
+                        </div>
+                        <flux:button wire:click="enterSelfCopyMode" variant="filled" size="sm" class="w-full bg-amber-600 hover:bg-amber-500 text-white">
+                            Configure Self-Copy
+                        </flux:button>
                     </div>
-                    <flux:heading size="sm">No master accounts yet</flux:heading>
-                    <flux:text class="mt-1 text-zinc-500">The admin hasn't designated any master traders yet.</flux:text>
                 </div>
-            @else
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach($this->masters as $master)
-                        <div wire:key="{{ $master->id }}"
-                             class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5 hover:border-[#1E45FC]/30 transition-colors">
-                            <div class="mb-3 flex items-start justify-between">
-                                <div class="flex items-center gap-3">
-                                    <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" />
-                                    <div>
-                                        <p class="font-semibold text-white">{{ $master->user->name }}</p>
-                                        <p class="text-xs text-zinc-500">{{ $master->user->email }}</p>
+            @endif
+
+            {{-- Platform masters --}}
+            @if(! $showForm)
+                <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Platform Masters</p>
+                @if($this->masters->isEmpty())
+                    <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-6 py-12 text-center">
+                        <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-800 p-4">
+                            <flux:icon.user-group class="size-6 text-zinc-400" />
+                        </div>
+                        <flux:heading size="sm">No platform masters yet</flux:heading>
+                        <flux:text class="mt-1 text-zinc-500">The admin hasn't designated any master traders yet.</flux:text>
+                    </div>
+                @else
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach($this->masters as $master)
+                            <div wire:key="{{ $master->id }}"
+                                 class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5 hover:border-[#1E45FC]/30 transition-colors">
+                                <div class="mb-3 flex items-start justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" />
+                                        <div>
+                                            <p class="font-semibold text-white">{{ $master->user->name }}</p>
+                                            <p class="text-xs text-zinc-500">{{ $master->user->email }}</p>
+                                        </div>
                                     </div>
                                 </div>
+                                <p class="mb-4 text-sm text-zinc-500">
+                                    <span class="font-medium text-zinc-300">{{ $master->followers_count }}</span>
+                                    {{ Str::plural('follower', $master->followers_count) }}
+                                </p>
+                                <flux:button wire:click="selectMaster({{ $master->id }})" size="sm" variant="primary" class="w-full">
+                                    Follow This Master
+                                </flux:button>
                             </div>
-                            <p class="mb-4 text-sm text-zinc-500">
-                                <span class="font-medium text-zinc-300">{{ $master->followers_count }}</span>
-                                {{ Str::plural('follower', $master->followers_count) }}
-                            </p>
-                            <flux:button wire:click="selectMaster({{ $master->id }})" size="sm" variant="primary" class="w-full">
-                                Follow This Master
-                            </flux:button>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
+                @endif
             @endif
         </div>
 
@@ -228,6 +314,28 @@
             </div>
         </div>
 
+        {{-- ===== LISTENER STATUS ===== --}}
+        @if($setting->is_running)
+            <div @class([
+                'rounded-xl border px-5 py-3 flex items-center gap-3',
+                'border-[#22C55E]/30 bg-[#22C55E]/5' => $this->listenerAlive,
+                'border-amber-700/40 bg-amber-900/10' => !$this->listenerAlive,
+            ])>
+                @if($this->listenerAlive)
+                    <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#22C55E]"></span>
+                    <p class="text-sm text-[#22C55E]">
+                        <strong>Listener active</strong> — the background worker is connected and monitoring your master account.
+                    </p>
+                @else
+                    <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-400"></span>
+                    <p class="text-sm text-amber-300">
+                        <strong>Listener starting…</strong> — the worker is initialising. It will be ready within 60 seconds.
+                        If it does not come online, check that your queue workers and scheduler are running.
+                    </p>
+                @endif
+            </div>
+        @endif
+
         {{-- ===== EXPANDABLE SETTINGS PANEL ===== --}}
         @if($settingsOpen)
         <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
@@ -242,9 +350,16 @@
                 <div class="col-span-full rounded-lg border border-[#1F2937] bg-[#111827] p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Following Master</p>
-                            <p class="mt-1 font-semibold text-white">{{ $setting->masterConnection?->user?->name }}</p>
-                            <p class="text-xs text-zinc-500">{{ $setting->masterConnection?->user?->email }}</p>
+                            <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Master</p>
+                            @if($setting->master_account_id)
+                                <p class="mt-1 font-semibold text-white">
+                                    Self-copy — <span class="font-mono text-amber-400">{{ $setting->master_account_id }}</span>
+                                </p>
+                                <p class="text-xs text-zinc-500">Your own account is the master</p>
+                            @else
+                                <p class="mt-1 font-semibold text-white">{{ $setting->masterConnection?->user?->name }}</p>
+                                <p class="text-xs text-zinc-500">{{ $setting->masterConnection?->user?->email }}</p>
+                            @endif
                         </div>
                         <flux:button wire:click="$toggle('showMasterList')" size="sm" variant="ghost" icon="arrows-right-left">
                             {{ $showMasterList ? 'Cancel' : 'Change Master' }}
@@ -252,48 +367,125 @@
                     </div>
 
                     @if($showMasterList)
-                        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            @foreach($this->masters as $master)
-                                @php $isCurrent = $setting->master_connection_id === $master->id; @endphp
-                                <div wire:key="ml-{{ $master->id }}"
-                                    class="rounded-lg border p-3 transition-colors
-                                        {{ $isCurrent ? 'border-[#1E45FC]/40 bg-[#1E45FC]/5' : 'border-[#1F2937] bg-[#0B1220]' }}">
-                                    <div class="mb-2 flex items-center gap-2">
-                                        <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" size="sm" />
-                                        <div class="min-w-0">
-                                            <p class="truncate text-sm font-semibold text-white">{{ $master->user->name }}</p>
-                                            <p class="text-xs text-zinc-500">{{ $master->followers_count }} {{ Str::plural('follower', $master->followers_count) }}</p>
+                        <div class="mt-4 space-y-3">
+
+                            {{-- Self-copy option --}}
+                            @php $ownConn = auth()->user()->derivConnection; @endphp
+                            @if($ownConn)
+                                <div class="rounded-lg border border-amber-800/40 bg-[#0B1220] p-3">
+                                    <p class="mb-2 text-xs font-semibold text-amber-400">Use My Own Account</p>
+
+                                    {{-- Master account picker --}}
+                                    @if(count($this->myAccounts) > 0)
+                                        <p class="mb-1 text-xs text-zinc-500">Master account (copy FROM):</p>
+                                        <div class="mb-2 space-y-1">
+                                            @foreach($this->myAccounts as $account)
+                                                @php
+                                                    $isDemoAcc = ($account['is_demo'] ?? false) || ($account['account_type'] ?? '') === 'demo';
+                                                @endphp
+                                                <label class="flex cursor-pointer items-center gap-2 rounded p-1.5 hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="masterAccountId" value="{{ $account['account_id'] }}"
+                                                        class="text-amber-400 focus:ring-amber-400" />
+                                                    <span class="text-xs text-white">{{ $isDemoAcc ? 'Demo' : 'Real' }} — {{ $account['account_id'] }}</span>
+                                                </label>
+                                            @endforeach
                                         </div>
-                                    </div>
-                                    @if(! $isCurrent)
-                                        <flux:button wire:click="switchMaster({{ $master->id }})" wire:loading.attr="disabled" wire:target="switchMaster({{ $master->id }})" size="xs" variant="primary" class="w-full">
-                                            <span wire:loading.remove wire:target="switchMaster({{ $master->id }})">Switch</span>
-                                            <span wire:loading wire:target="switchMaster({{ $master->id }})">…</span>
+                                    @endif
+
+                                    @if(! ($setting->master_account_id && $setting->master_connection_id === $ownConn->id))
+                                        <flux:button wire:click="switchToSelfCopy" wire:loading.attr="disabled" wire:target="switchToSelfCopy"
+                                            size="xs" class="w-full bg-amber-600 hover:bg-amber-500 text-white">
+                                            <span wire:loading.remove wire:target="switchToSelfCopy">Switch to Self-Copy</span>
+                                            <span wire:loading wire:target="switchToSelfCopy">…</span>
                                         </flux:button>
                                     @else
-                                        <span class="inline-flex w-full items-center justify-center gap-1 rounded-full bg-[#CDF12B]/10 py-1 text-xs font-medium text-[#CDF12B]">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-[#CDF12B]"></span>
-                                            Current
+                                        <span class="inline-flex w-full items-center justify-center gap-1 rounded-full bg-amber-500/10 py-1 text-xs font-medium text-amber-400">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                                            Current (self-copy)
                                         </span>
                                     @endif
                                 </div>
-                            @endforeach
+                            @endif
+
+                            {{-- Platform masters --}}
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                @foreach($this->masters as $master)
+                                    @php $isCurrent = $setting->master_connection_id === $master->id && ! $setting->master_account_id; @endphp
+                                    <div wire:key="ml-{{ $master->id }}"
+                                        class="rounded-lg border p-3 transition-colors
+                                            {{ $isCurrent ? 'border-[#1E45FC]/40 bg-[#1E45FC]/5' : 'border-[#1F2937] bg-[#0B1220]' }}">
+                                        <div class="mb-2 flex items-center gap-2">
+                                            <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" size="sm" />
+                                            <div class="min-w-0">
+                                                <p class="truncate text-sm font-semibold text-white">{{ $master->user->name }}</p>
+                                                <p class="text-xs text-zinc-500">{{ $master->followers_count }} {{ Str::plural('follower', $master->followers_count) }}</p>
+                                            </div>
+                                        </div>
+                                        @if(! $isCurrent)
+                                            <flux:button wire:click="switchMaster({{ $master->id }})" wire:loading.attr="disabled" wire:target="switchMaster({{ $master->id }})" size="xs" variant="primary" class="w-full">
+                                                <span wire:loading.remove wire:target="switchMaster({{ $master->id }})">Switch</span>
+                                                <span wire:loading wire:target="switchMaster({{ $master->id }})">…</span>
+                                            </flux:button>
+                                        @else
+                                            <span class="inline-flex w-full items-center justify-center gap-1 rounded-full bg-[#CDF12B]/10 py-1 text-xs font-medium text-[#CDF12B]">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-[#CDF12B]"></span>
+                                                Current
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
 
-                {{-- Follower account --}}
-                @if(count($this->followerAccounts) > 0)
+                {{-- Self-copy: master account in settings --}}
+                @if($selfCopyMode && count($this->myAccounts) > 0)
                 <div class="col-span-full">
-                    <flux:label class="mb-2 block">Your Trading Account</flux:label>
+                    <flux:label class="mb-2 block">Master Account <span class="text-amber-400">(copy FROM)</span></flux:label>
+                    <flux:text class="mb-3 text-xs text-zinc-500">Which account's trades are being copied.</flux:text>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach($this->myAccounts as $account)
+                            @php $isDemo = ($account['is_demo'] ?? false) || ($account['account_type'] ?? '') === 'demo'; @endphp
+                            <label wire:key="master-set-{{ $account['account_id'] }}"
+                                class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors
+                                    {{ $masterAccountId === $account['account_id']
+                                        ? 'border-amber-500/50 bg-amber-500/5'
+                                        : 'border-[#1F2937] bg-[#111827] hover:border-[#1F2937]/80' }}"
+                            >
+                                <input type="radio" wire:model.live="masterAccountId" value="{{ $account['account_id'] }}"
+                                    class="text-amber-400 focus:ring-amber-400" />
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-white">{{ $isDemo ? 'Demo' : 'Real' }} — {{ $account['account_id'] }}</span>
+                                        <span @class([
+                                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                            'bg-amber-500/10 text-amber-400' => $isDemo,
+                                            'bg-[#22C55E]/10 text-[#22C55E]' => !$isDemo,
+                                        ])>{{ $isDemo ? 'Demo' : 'Real' }}</span>
+                                    </div>
+                                    <p class="mt-0.5 text-xs text-zinc-500">{{ number_format($account['balance'] ?? 0, 2) }} {{ strtoupper($account['currency'] ?? 'USD') }}</p>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- Follower account --}}
+                @if(count($this->myAccounts) > 0)
+                <div class="col-span-full">
+                    <flux:label class="mb-2 block">
+                        @if($selfCopyMode)
+                            Follower Account <span class="text-[#1E45FC]">(copy TO)</span>
+                        @else
+                            Your Trading Account
+                        @endif
+                    </flux:label>
                     <flux:text class="mb-3 text-xs text-zinc-500">Choose which account (real or demo) will copy trades.</flux:text>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach($this->followerAccounts as $account)
-                            @php
-                                $isDemo = ($account['account_type'] ?? '') === 'demo';
-                                $accLabel = ($isDemo ? 'Demo' : 'Real') . ' — ' . $account['account_id'];
-                                $accSub = number_format($account['balance'] ?? 0, 2) . ' ' . strtoupper($account['currency'] ?? 'USD');
-                            @endphp
+                        @foreach($this->myAccounts as $account)
+                            @php $isDemo = ($account['is_demo'] ?? false) || ($account['account_type'] ?? '') === 'demo'; @endphp
                             <label wire:key="acc-{{ $account['account_id'] }}"
                                 class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors
                                     {{ $followerAccountId === $account['account_id']
@@ -304,14 +496,14 @@
                                     class="text-[#1E45FC] focus:ring-[#1E45FC]" />
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-white">{{ $accLabel }}</span>
+                                        <span class="text-sm font-medium text-white">{{ $isDemo ? 'Demo' : 'Real' }} — {{ $account['account_id'] }}</span>
                                         <span @class([
                                             'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
                                             'bg-amber-500/10 text-amber-400' => $isDemo,
                                             'bg-[#22C55E]/10 text-[#22C55E]' => !$isDemo,
                                         ])>{{ $isDemo ? 'Demo' : 'Real' }}</span>
                                     </div>
-                                    <p class="mt-0.5 text-xs text-zinc-500">Balance: {{ $accSub }}</p>
+                                    <p class="mt-0.5 text-xs text-zinc-500">{{ number_format($account['balance'] ?? 0, 2) }} {{ strtoupper($account['currency'] ?? 'USD') }}</p>
                                 </div>
                             </label>
                         @endforeach
@@ -452,21 +644,27 @@
             {{-- Master account --}}
             <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-4 py-3">
                 <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Master Account</p>
-                <p class="mt-1 text-sm font-semibold text-white">{{ $setting->masterConnection?->user?->name }}</p>
+                @if($setting->master_account_id)
+                    <p class="mt-1 font-mono text-sm font-semibold text-amber-400">{{ $setting->master_account_id }}</p>
+                    <p class="text-xs text-zinc-500">Self-copy</p>
+                @else
+                    <p class="mt-1 text-sm font-semibold text-white">{{ $setting->masterConnection?->user?->name }}</p>
+                @endif
+                @php $masterConn = $setting->masterConnection; @endphp
                 <span @class([
                     'mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-                    'bg-[#22C55E]/10 text-[#22C55E]' => $setting->masterConnection && !$setting->masterConnection->isExpired(),
-                    'bg-red-500/10 text-red-400' => !$setting->masterConnection || $setting->masterConnection->isExpired(),
+                    'bg-[#22C55E]/10 text-[#22C55E]' => $masterConn && !$masterConn->isExpired(),
+                    'bg-red-500/10 text-red-400' => !$masterConn || $masterConn->isExpired(),
                 ])>
-                    <span class="h-1.5 w-1.5 rounded-full {{ $setting->masterConnection && !$setting->masterConnection->isExpired() ? 'bg-[#22C55E]' : 'bg-red-400' }}"></span>
-                    {{ $setting->masterConnection && !$setting->masterConnection->isExpired() ? 'Connected' : 'Disconnected' }}
+                    <span class="h-1.5 w-1.5 rounded-full {{ $masterConn && !$masterConn->isExpired() ? 'bg-[#22C55E]' : 'bg-red-400' }}"></span>
+                    {{ $masterConn && !$masterConn->isExpired() ? 'Connected' : 'Disconnected' }}
                 </span>
             </div>
 
             {{-- Follower account --}}
             @php $myConnection = auth()->user()->derivConnection; @endphp
             <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-4 py-3">
-                <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Your Account</p>
+                <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Follower Account</p>
                 @if($setting->follower_account_id)
                     <p class="mt-1 font-mono text-sm font-semibold text-white">{{ $setting->follower_account_id }}</p>
                 @else
