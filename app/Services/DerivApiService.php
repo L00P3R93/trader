@@ -144,7 +144,7 @@ class DerivApiService
      * Buy a contract on behalf of a follower.
      * Fetches a price proposal then immediately buys it.
      *
-     * @param  array{contract_type: string, symbol: string, duration: int, duration_unit: string, stake: float, basis: string, app_markup_percentage: float}  $params
+     * @param  array{contract_type: string, symbol: string, duration: int, duration_unit: string, stake: float, basis: string, follower_account_id?: string}  $params
      */
     public function buyContract(DerivConnection $connection, array $params): array
     {
@@ -157,8 +157,7 @@ class DerivApiService
                 'currency' => 'USD',
                 'duration' => $params['duration'],
                 'duration_unit' => $params['duration_unit'],
-                'symbol' => $params['symbol'],
-                'app_markup_percentage' => (float) ($params['app_markup_percentage'] ?? 0),
+                'underlying_symbol' => $params['symbol'],
                 'req_id' => 1,
             ]);
 

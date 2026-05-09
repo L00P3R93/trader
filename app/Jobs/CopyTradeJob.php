@@ -73,7 +73,6 @@ class CopyTradeJob implements ShouldQueue
                     'duration_unit' => $this->masterTrade['duration_unit'] ?? 't',
                     'stake' => $stake,
                     'basis' => 'stake',
-                    'app_markup_percentage' => config('deriv.markup_percentage', 0),
                     'follower_account_id' => $setting->follower_account_id,
                 ]);
 
