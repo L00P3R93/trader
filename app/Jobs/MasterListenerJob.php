@@ -36,22 +36,31 @@ class MasterListenerJob implements ShouldQueue
             return;
         }
 
-        if (! $this->hasActiveFollowers()) {
-            Log::info("MasterListenerJob: no active followers for connection #{$this->connectionId} — exiting.");
-
-            return;
-        }
-
-        Log::info("MasterListenerJob starting for connection #{$this->connectionId}");
-        $this->updateHeartbeat();
-
         $masterAccountId = $this->resolveMasterAccountId($connection);
 
-        Log::info("MasterListenerJob listening on account {$masterAccountId}");
+        Log::info("MasterListenerJob starting for connection #{$this->connectionId}, account {$masterAccountId}");
 
-        $wsUrl = app(DerivApiService::class)->getOtpUrl($connection, $masterAccountId);
+        // Self-healing loop: reconnects automatically if the WebSocket drops or
+        // Deriv closes the session. Exits only when there are no active followers.
+        while (true) {
+            if (! $this->hasActiveFollowers()) {
+                Log::info("MasterListenerJob: no active followers for connection #{$this->connectionId} — exiting.");
 
-        $this->runSession($wsUrl);
+                return;
+            }
+
+            $connection = $connection->fresh() ?? $connection;
+            $this->updateHeartbeat();
+
+            try {
+                $wsUrl = app(DerivApiService::class)->getOtpUrl($connection, $masterAccountId);
+                Log::info("MasterListenerJob: opening session for connection #{$this->connectionId}");
+                $this->runSession($wsUrl);
+            } catch (\Throwable $e) {
+                Log::warning("MasterListenerJob: session ended for connection #{$this->connectionId} — {$e->getMessage()}. Reconnecting in 5s...");
+                sleep(5);
+            }
+        }
     }
 
     // ─── WebSocket session ─────────────────────────────────────────────────────
@@ -77,7 +86,7 @@ class MasterListenerJob implements ShouldQueue
             throw new \RuntimeException("WebSocket connection failed: {$errstr}");
         }
 
-        // 30-second read timeout — lets us check heartbeat / stop condition periodically
+        // 30-second read timeout — lets us check stop condition periodically when idle
         stream_set_timeout($socket, 30);
 
         $this->sendWsHandshake($socket, $wsUrl);
@@ -90,6 +99,7 @@ class MasterListenerJob implements ShouldQueue
         // Pending map: req_id => transaction_data (awaiting proposal_open_contract)
         $pending = [];
         $nextReqId = 50;
+        $lastHeartbeat = 0;
 
         while (true) {
             $message = $this->receiveWsMessage($socket);
@@ -99,6 +109,7 @@ class MasterListenerJob implements ShouldQueue
 
                 if ($meta['timed_out'] ?? false) {
                     $this->updateHeartbeat();
+                    $lastHeartbeat = time();
 
                     if (! $this->hasActiveFollowers()) {
                         Log::info('MasterListenerJob: no active followers — shutting down cleanly.');
@@ -114,6 +125,13 @@ class MasterListenerJob implements ShouldQueue
 
                 fclose($socket);
                 throw new \RuntimeException('Connection closed by server');
+            }
+
+            // Refresh heartbeat during active trading so it doesn't expire
+            // when the socket never idles long enough to trigger the timeout branch.
+            if (time() - $lastHeartbeat >= 30) {
+                $this->updateHeartbeat();
+                $lastHeartbeat = time();
             }
 
             $this->handleMessage($socket, $message, $pending, $nextReqId);
