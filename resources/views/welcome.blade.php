@@ -6,6 +6,7 @@
     <title>Fully Automated Bots CT — Copy the Best Traders. Automatically.</title>
     <meta name="description" content="Connect your Deriv account, follow top traders, and let Fully Automated Bots CT mirror every trade in real time.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
@@ -119,7 +120,7 @@
                 <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
-                <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg x-cloak x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
@@ -127,6 +128,7 @@
 
         {{-- Mobile drawer --}}
         <div
+            x-cloak
             x-show="open"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 -translate-y-2"

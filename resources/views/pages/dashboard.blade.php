@@ -206,17 +206,43 @@
                     </div>
 
                 @else
-                    <div class="flex flex-col items-center py-6 text-center">
-                        <div class="mb-4 rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
-                            <flux:icon.link class="size-6 text-zinc-400" />
+                    <div class="grid grid-cols-1 gap-px sm:grid-cols-2">
+                        {{-- Option 1: OAuth2 --}}
+                        <div class="flex flex-col gap-3 py-5 sm:pr-6">
+                            <div class="flex items-center gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
+                                    <flux:icon.arrow-top-right-on-square class="size-4 text-indigo-500" />
+                                </div>
+                                <flux:heading size="sm">OAuth2 <span class="text-xs font-normal text-zinc-400">(Recommended)</span></flux:heading>
+                            </div>
+                            <flux:text class="text-sm text-zinc-500">
+                                Sign in securely via Deriv's website. No token copying needed.
+                            </flux:text>
+                            <flux:button href="{{ route('deriv.connect') }}" variant="primary" icon="link" class="mt-auto">
+                                Connect via Deriv
+                            </flux:button>
                         </div>
-                        <flux:heading size="sm">No Deriv account connected</flux:heading>
-                        <flux:text class="mb-4 mt-1 max-w-sm text-zinc-500">
-                            Connect your Deriv account to start copy trading and access all platform features.
-                        </flux:text>
-                        <flux:button href="{{ route('deriv.connect') }}" variant="primary" icon="link">
-                            Connect Deriv Account
-                        </flux:button>
+
+                        {{-- Option 2: Personal Access Token --}}
+                        <div class="flex flex-col gap-3 border-t border-zinc-100 py-5 dark:border-zinc-800 sm:border-l sm:border-t-0 sm:pl-6">
+                            <div class="flex items-center gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                                    <flux:icon.key class="size-4 text-amber-500" />
+                                </div>
+                                <flux:heading size="sm">Personal Access Token</flux:heading>
+                            </div>
+                            <flux:text class="text-sm text-zinc-500">
+                                Generate a token in your <a href="https://app.deriv.com/account/api-token" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">Deriv settings</a> and paste it below.
+                            </flux:text>
+                            @error('pat_token')
+                                <p class="text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                            <form method="POST" action="{{ route('deriv.connect.pat') }}" class="mt-auto flex flex-col gap-2">
+                                @csrf
+                                <flux:input type="password" name="pat_token" placeholder="Paste your API token" required />
+                                <flux:button type="submit" variant="ghost" icon="key">Connect with Token</flux:button>
+                            </form>
+                        </div>
                     </div>
                 @endif
             </div>
