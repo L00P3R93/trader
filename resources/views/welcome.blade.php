@@ -188,7 +188,7 @@
 
                 {{-- Subheadline --}}
                 <p class="slide-up-3 text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-9">
-                    Authorize your Deriv account via OAuth, set a win streak filter, and let our platform mirror every master trade to your account in real time — automatically.
+                    Connect your Deriv account, choose a master trader, configure your trade pattern and stake settings, and let our platform mirror every trade to your account in real time — automatically.
                 </p>
 
                 {{-- CTA buttons --}}
@@ -364,8 +364,8 @@
                     No API key pasting, no third-party bridges — just a secure one-click authorization that links your Deriv account in seconds.
                 </p>
                 <p>
-                    Master traders activate their account on the platform. Followers browse available masters, configure
-                    their copy settings — including a <span class="text-white font-semibold">minimum consecutive wins filter</span> to only follow traders on a proven streak — and start copying with a single click.
+                    Connect your Deriv account and choose a master trader from the platform. Configure
+                    your copy settings — including a <span class="text-white font-semibold">trade pattern filter</span> that defines a win/loss sequence the master must have matched before copying activates — and start copying with a single click.
                 </p>
                 <p>
                     Your funds <span class="text-white font-semibold">never leave your Deriv account</span>.
@@ -382,7 +382,7 @@
                     'One-click Deriv OAuth — no API key copy-pasting',
                     'Encrypted OAuth token storage, never readable in plain text',
                     'Your funds stay in YOUR Deriv account always',
-                    'Win streak filter — only follow traders on a proven run',
+                    'Trade pattern filter — define a win/loss sequence that triggers copying',
                     'Options and CFD accounts, demo and real — all in one dashboard',
                     'Pause or disconnect from a master any time, instantly',
                 ] as $feature)
@@ -417,8 +417,8 @@
                     'icon'  => 'M13 10V3L4 14h7v7l9-11h-7z',
                 ],
                 [
-                    'title' => 'Win Streak Filter',
-                    'desc'  => 'Set a minimum consecutive wins threshold before copying begins. Only follow a master when they are on a proven streak — reducing exposure to cold streaks automatically.',
+                    'title' => 'Trade Pattern Filter',
+                    'desc'  => 'Define a custom win/loss pattern — e.g. "111" for three consecutive wins — that must match the master\'s recent trade history before copying activates. Keeps you out of cold streaks automatically.',
                     'icon'  => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
                 ],
                 [
@@ -437,9 +437,9 @@
                     'icon'  => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
                 ],
                 [
-                    'title' => 'Master & Follower Roles',
-                    'desc'  => 'Any user can be a master, a follower, or both. Masters trade normally on Deriv; followers link to a master, set their copy settings, and trades mirror automatically.',
-                    'icon'  => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                    'title' => 'Flexible Stake & Risk Controls',
+                    'desc'  => 'Set a fixed stake, mirror the master\'s exact stake amount, or apply a multiplier. Add take profit and stop loss thresholds per session, enable Martingale after losses, and filter which markets are copied.',
+                    'icon'  => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
                 ],
             ] as $card)
             <div class="group p-6 rounded-2xl bg-[#0B1220] border border-[#1F2937] hover:border-[#1E45FC]/30 hover:shadow-[0_0_40px_rgba(30,69,252,0.07)] transition-all duration-300 hover:scale-[1.02] cursor-default">
@@ -476,7 +476,7 @@
                 @foreach ([
                     ['01', 'Create Your Account',         'Sign up free and verify your email. Takes less than 60 seconds — no credit card required.'],
                     ['02', 'Authorize via Deriv OAuth',   'Click "Connect Deriv Account" and authorize through Deriv\'s official OAuth flow. No API keys to copy or paste — your token is stored encrypted automatically.'],
-                    ['03', 'Choose a Master & Set Filter', 'Select a master trader from the platform and set your minimum consecutive wins filter. Copying only activates when the master is on a qualifying streak.'],
+                    ['03', 'Choose a Master & Configure', 'Browse available masters on the platform and select one to follow. Set your stake amount, trade pattern filter, take profit / stop loss, and market filters. All settings can be changed at any time.'],
                     ['04', 'Trades Mirror Automatically',  'Sit back. Every trade the master places on Deriv is mirrored to your account in real time. Your live balance and P&L update instantly on your dashboard.'],
                 ] as [$num, $title, $desc])
                 <div class="flex flex-col items-center text-center">
@@ -535,7 +535,7 @@
                 ],
                 [
                     'q' => 'How does the real-time copying actually work?',
-                    'a' => "Our server runs a persistent background process (ListenMasterAccount) that maintains a live Deriv WebSocket connection for each active master trader. The moment a master's trade is detected, a CopyTradeJob is dispatched to our queue and fans out simultaneously to every active follower — each trade is placed in the follower's Deriv account within seconds, completely automatically.",
+                    'a' => "Our server maintains a persistent Deriv WebSocket connection for each active master via a background queue job. The moment a master's trade is detected, a copy job fans out simultaneously to every active follower — each trade is placed in the follower's Deriv account within seconds, completely automatically. A heartbeat system monitors the connection and restarts it automatically if it drops.",
                 ],
                 [
                     'q' => 'How fast are trades copied?',
@@ -547,19 +547,19 @@
                 ],
                 [
                     'q' => 'Can I set limits to protect my capital?',
-                    'a' => "Yes. Our RiskManager enforces a daily loss limit per master-follower pair. Once your daily loss threshold is reached, copying pauses automatically for the rest of the day. You can also manually pause or disconnect from a master at any time from your dashboard — no delay, no waiting.",
+                    'a' => "Yes. Each copy session supports a take profit target and a stop loss threshold — the bot pauses automatically when either is reached. You can also cap Martingale progression, restrict which markets are copied (Volatility indices, Forex pairs, or specific synthetic instruments), and manually pause or stop the bot at any time from your dashboard.",
                 ],
                 [
-                    'q' => 'What stake sizing modes are available?',
-                    'a' => "Three modes: Proportional (your stake scales relative to your balance vs the master's balance), Fixed (a set dollar amount per trade, regardless of master stake), or Multiplier (copy at a fixed multiple of the master's stake). Each follower-master link has its own independent mode and settings.",
+                    'q' => 'What stake sizing options are available?',
+                    'a' => "Three main options: Fixed (a set dollar amount per trade), Follow Master Stake (mirror the master's exact stake amount on each trade), or Multiplier (copy at a fixed multiple of your configured stake). You can also enable Martingale — automatically scaling up your stake after losses up to a configurable maximum, with a choice of what happens if that maximum is reached.",
                 ],
                 [
                     'q' => 'Can I follow multiple masters at once?',
                     'a' => "Yes. You can connect multiple Deriv follower accounts and link each to a different master trader, each with its own stake mode, loss limit, and copy settings. Accounts are isolated — risk limits and copy status on one do not affect the others.",
                 ],
                 [
-                    'q' => 'Can I become a master trader?',
-                    'a' => "Yes. Connect your Deriv account as a Master from the dashboard. Once active, our system opens a persistent WebSocket listener on your account. Every trade you place in Deriv is automatically detected and copied to your followers in real time. Your own trades and P&L are completely unaffected.",
+                    'q' => 'Can I pause or stop copying at any time?',
+                    'a' => "Yes. You can manually pause or completely disconnect from a master at any time directly from your dashboard — no delay, no waiting. Copying stops immediately. Your Deriv account and any open trades are completely unaffected.",
                 ],
                 [
                     'q' => 'What is Deriv?',

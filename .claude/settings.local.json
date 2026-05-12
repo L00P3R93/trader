@@ -98,7 +98,8 @@
       "mcp__laravel-boost__list-routes",
       "Bash(findstr APP_NAME)",
       "Bash(powershell -Command \"\\(Get-Content .env\\) -replace '^APP_NAME=.*', 'APP_NAME=\\\\\"Fully Automated Bots CT\\\\\"' | Set-Content .env -Encoding utf8\")",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "mcp__laravel-boost__read-log-entries"
     ]
   },
   "enableAllProjectMcpServers": true,
