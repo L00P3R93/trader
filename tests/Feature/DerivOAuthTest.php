@@ -106,6 +106,65 @@ test('disconnect removes deriv connection', function () {
     expect($user->hasDerivConnected())->toBeFalse();
 });
 
+test('pat connection stores token and redirects to account page', function () {
+    $user = User::factory()->create();
+
+    Http::fake([
+        'api.derivws.com/trading/v1/options/accounts' => Http::response([
+            'data' => [['account_id' => 'CR123', 'currency' => 'USD']],
+        ], 200),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('deriv.connect.pat'), ['pat_token' => 'a1b2c3d4e5f6g7h8i9j0'])
+        ->assertRedirect(route('account'))
+        ->assertSessionHas('success');
+
+    $conn = $user->fresh()->derivConnection;
+    expect($conn)->not->toBeNull()
+        ->and($conn->token_type)->toBe('pat')
+        ->and($conn->expires_at)->toBeNull()
+        ->and($conn->scope)->toBeNull();
+});
+
+test('pat connection rejects invalid token', function () {
+    $user = User::factory()->create();
+
+    Http::fake([
+        'api.derivws.com/trading/v1/options/accounts' => Http::response(['error' => 'Unauthorized'], 401),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('deriv.connect.pat'), ['pat_token' => 'invalid-token-here'])
+        ->assertRedirect(route('account'))
+        ->assertSessionHas('error');
+
+    expect($user->hasDerivConnected())->toBeFalse();
+});
+
+test('pat connection requires token field', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('deriv.connect.pat'), ['pat_token' => ''])
+        ->assertSessionHasErrors('pat_token');
+});
+
+test('pat connection updates existing connection', function () {
+    $user = User::factory()->create();
+    DerivConnection::factory()->create(['user_id' => $user->id]);
+
+    Http::fake([
+        'api.derivws.com/trading/v1/options/accounts' => Http::response(['data' => []], 200),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('deriv.connect.pat'), ['pat_token' => 'new-pat-token-1234567']);
+
+    expect($user->derivConnection()->count())->toBe(1)
+        ->and($user->fresh()->derivConnection->token_type)->toBe('pat');
+});
+
 test('callback updates existing connection on reconnect', function () {
     $user = User::factory()->create();
     DerivConnection::factory()->create(['user_id' => $user->id, 'access_token' => 'old-token']);

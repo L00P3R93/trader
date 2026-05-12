@@ -1,4 +1,4 @@
-<div class="space-y-6" x-data="{ runSeconds: 0, timer: null }"
+<div class="space-y-6" wire:poll.15s x-data="{ runSeconds: 0, timer: null }"
     x-init="
         $watch('$wire.setting?.is_running', val => {
             if (val) { timer = setInterval(() => runSeconds++, 1000); }
@@ -323,15 +323,10 @@
             ])>
                 @if($this->listenerAlive)
                     <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#22C55E]"></span>
-                    <p class="text-sm text-[#22C55E]">
-                        <strong>Listener active</strong> — the background worker is connected and monitoring your master account.
-                    </p>
+                    <span class="text-sm font-medium text-[#22C55E]">Listener active</span>
                 @else
                     <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-400"></span>
-                    <p class="text-sm text-amber-300">
-                        <strong>Listener starting…</strong> — the worker is initialising. It will be ready within 60 seconds.
-                        If it does not come online, check that your queue workers and scheduler are running.
-                    </p>
+                    <span class="text-sm font-medium text-amber-300">Listener starting…</span>
                 @endif
             </div>
         @endif
@@ -824,7 +819,7 @@
                                     <td class="px-4 py-2 font-mono text-zinc-300">{{ $trade->traded_at?->format('Y-m-d H:i:s') ?? '—' }}</td>
                                     <td class="px-4 py-2 font-mono text-zinc-400">{{ $trade->follower_trx_id ?? '—' }}</td>
                                     <td class="px-4 py-2 text-zinc-300">{{ $trade->duration ?? '—' }}</td>
-                                    <td class="px-4 py-2 text-zinc-300">{{ $trade->barrier ?? $trade->contract_type ?? '—' }}</td>
+                                    <td class="px-4 py-2 text-zinc-300">{{ $trade->barrier ?? '—' }}</td>
                                     <td class="px-4 py-2 font-medium text-white">{{ number_format($trade->stake, 2) }}</td>
                                     <td class="px-4 py-2 text-zinc-300">{{ $trade->payout !== null ? number_format($trade->payout, 2) : '—' }}</td>
                                     <td class="px-4 py-2 font-medium {{ $trade->profit !== null && $trade->profit >= 0 ? 'text-[#22C55E]' : 'text-red-400' }}">

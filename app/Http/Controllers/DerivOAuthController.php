@@ -95,6 +95,54 @@ class DerivOAuthController extends Controller
     }
 
     /**
+     * Store a Personal Access Token (PAT) as a Deriv connection.
+     * Validates the token against the Deriv REST API before saving.
+     */
+    public function connectPat(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'pat_token' => ['required', 'string', 'min:10'],
+        ]);
+
+        $token = $validated['pat_token'];
+
+        try {
+            $response = Http::withHeaders([
+                'Deriv-App-ID' => (string) config('deriv.app_id'),
+                'Authorization' => 'Bearer '.$token,
+                'Accept' => 'application/json',
+            ])->get('https://api.derivws.com/trading/v1/options/accounts');
+        } catch (\Throwable) {
+            return redirect()->route('account')
+                ->with('error', 'Could not reach Deriv. Please try again.');
+        }
+
+        if ($response->status() === 401) {
+            return redirect()->route('account')
+                ->with('error', 'Invalid token. Please check your Personal Access Token and try again.');
+        }
+
+        if ($response->failed()) {
+            $msg = $response->json('errors.0.message', 'Could not verify your token. Please try again.');
+
+            return redirect()->route('account')->with('error', $msg);
+        }
+
+        DerivConnection::updateOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'access_token' => $token,
+                'token_type' => 'pat',
+                'expires_at' => null,
+                'scope' => null,
+            ]
+        );
+
+        return redirect()->route('account')
+            ->with('success', 'Deriv account connected via Personal Access Token.');
+    }
+
+    /**
      * Disconnect the user's Deriv account.
      */
     public function disconnect(Request $request): RedirectResponse

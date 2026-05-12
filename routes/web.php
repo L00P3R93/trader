@@ -13,6 +13,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/deriv/connect', [DerivOAuthController::class, 'redirect'])->name('deriv.connect');
     Route::get('/deriv/callback', [DerivOAuthController::class, 'callback'])->name('deriv.callback');
+    Route::post('/deriv/connect-pat', [DerivOAuthController::class, 'connectPat'])->name('deriv.connect.pat');
     Route::delete('/deriv/disconnect', [DerivOAuthController::class, 'disconnect'])->name('deriv.disconnect');
 });
 

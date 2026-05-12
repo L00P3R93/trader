@@ -3,13 +3,64 @@
     @php $accounts = $this->accounts; $liveBalance = $this->balance; $apiError = $this->apiError; @endphp
 
     @if(! auth()->user()->hasDerivConnected())
-        <div class="rounded-xl border border-zinc-200 bg-white px-6 py-10 text-center dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
-                <flux:icon.link class="size-6 text-zinc-400" />
+        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="px-6 py-8 text-center">
+                <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
+                    <flux:icon.link class="size-6 text-zinc-400" />
+                </div>
+                <flux:heading size="sm">No Deriv account connected</flux:heading>
+                <flux:text class="mt-1 text-zinc-500">Choose how you'd like to connect your Deriv account.</flux:text>
             </div>
-            <flux:heading size="sm">No Deriv account connected</flux:heading>
-            <flux:text class="mb-4 mt-1 text-zinc-500">Connect your Deriv account to view account details.</flux:text>
-            <flux:button href="{{ route('deriv.connect') }}" variant="primary" icon="link">Connect Deriv Account</flux:button>
+
+            <div class="grid grid-cols-1 gap-px border-t border-zinc-200 dark:border-zinc-700 sm:grid-cols-2">
+                {{-- Option 1: OAuth2 --}}
+                <div class="flex flex-col gap-3 px-6 py-6">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
+                            <flux:icon.arrow-top-right-on-square class="size-4 text-indigo-500" />
+                        </div>
+                        <flux:heading size="sm">OAuth2 (Recommended)</flux:heading>
+                    </div>
+                    <flux:text class="text-sm text-zinc-500">
+                        Sign in securely via Deriv's website. No token copying required.
+                    </flux:text>
+                    <flux:button href="{{ route('deriv.connect') }}" variant="primary" icon="link" class="mt-auto w-full">
+                        Connect via Deriv
+                    </flux:button>
+                </div>
+
+                {{-- Option 2: Personal Access Token --}}
+                <div class="flex flex-col gap-3 border-t border-zinc-200 px-6 py-6 dark:border-zinc-700 sm:border-l sm:border-t-0">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                            <flux:icon.key class="size-4 text-amber-500" />
+                        </div>
+                        <flux:heading size="sm">Personal Access Token</flux:heading>
+                    </div>
+                    <flux:text class="text-sm text-zinc-500">
+                        Generate a token in your
+                        <a href="https://app.deriv.com/account/api-token" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">Deriv account settings</a>
+                        and paste it below.
+                    </flux:text>
+
+                    @if($errors->has('pat_token'))
+                        <p class="text-sm text-red-500">{{ $errors->first('pat_token') }}</p>
+                    @endif
+
+                    <form method="POST" action="{{ route('deriv.connect.pat') }}" class="mt-auto flex flex-col gap-2">
+                        @csrf
+                        <flux:input
+                            type="password"
+                            name="pat_token"
+                            placeholder="Paste your API token here"
+                            required
+                        />
+                        <flux:button type="submit" variant="ghost" icon="key" class="w-full">
+                            Connect with Token
+                        </flux:button>
+                    </form>
+                </div>
+            </div>
         </div>
     @else
 
@@ -232,17 +283,31 @@
             </div>
             <div class="grid grid-cols-1 gap-3 px-6 py-5 sm:grid-cols-3">
                 <div class="rounded-lg bg-[#111827] px-4 py-3">
-                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Token Type</p>
-                    <p class="mt-1 font-semibold capitalize text-white">{{ $conn->token_type }}</p>
+                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Connection Method</p>
+                    <p class="mt-1 font-semibold text-white">
+                        @if($conn->token_type === 'pat')
+                            Personal Access Token
+                        @else
+                            OAuth2
+                        @endif
+                    </p>
                 </div>
                 <div class="rounded-lg bg-[#111827] px-4 py-3">
                     <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Scopes</p>
-                    <p class="mt-1 font-mono text-xs text-zinc-300">{{ $conn->scope ?? 'trade account_manage' }}</p>
+                    <p class="mt-1 font-mono text-xs text-zinc-300">
+                        @if($conn->token_type === 'pat')
+                            As granted by token
+                        @else
+                            {{ $conn->scope ?? 'trade account_manage' }}
+                        @endif
+                    </p>
                 </div>
                 <div class="rounded-lg bg-[#111827] px-4 py-3">
                     <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Token Expires</p>
                     <p class="mt-1 text-sm font-medium {{ $conn->isExpired() ? 'text-[#FF5A5F]' : 'text-white' }}">
-                        @if($conn->expires_at)
+                        @if($conn->token_type === 'pat')
+                            No expiry
+                        @elseif($conn->expires_at)
                             @if($conn->isExpired()) Expired @else {{ $conn->expires_at->diffForHumans() }} @endif
                         @else
                             No expiry set
@@ -250,15 +315,38 @@
                     </p>
                 </div>
             </div>
-            <div class="flex gap-2 border-t border-[#1F2937] px-6 py-4">
+            <div class="flex flex-wrap items-center gap-2 border-t border-[#1F2937] px-6 py-4">
                 <flux:button href="{{ route('deriv.connect') }}" size="sm" variant="ghost" icon="arrow-path">
-                    Reconnect
+                    Reconnect via OAuth2
                 </flux:button>
-                <form method="POST" action="{{ route('deriv.disconnect') }}">
+                <flux:modal.trigger name="reconnect-pat">
+                    <flux:button size="sm" variant="ghost" icon="key">
+                        Reconnect via Token
+                    </flux:button>
+                </flux:modal.trigger>
+                <form method="POST" action="{{ route('deriv.disconnect') }}" class="ml-auto">
                     @csrf @method('DELETE')
                     <flux:button type="submit" size="sm" variant="danger">Disconnect</flux:button>
                 </form>
             </div>
+
+            <flux:modal name="reconnect-pat" class="w-full max-w-sm">
+                <flux:heading size="lg">Reconnect via Token</flux:heading>
+                <flux:text class="mt-1 text-zinc-500">
+                    Paste a Personal Access Token from your
+                    <a href="https://app.deriv.com/account/api-token" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">Deriv account settings</a>.
+                </flux:text>
+                <form method="POST" action="{{ route('deriv.connect.pat') }}" class="mt-4 flex flex-col gap-3">
+                    @csrf
+                    <flux:input type="password" name="pat_token" placeholder="Paste your API token here" required autofocus />
+                    <div class="flex justify-end gap-2">
+                        <flux:modal.close>
+                            <flux:button variant="ghost">Cancel</flux:button>
+                        </flux:modal.close>
+                        <flux:button type="submit" variant="primary" icon="key">Connect</flux:button>
+                    </div>
+                </form>
+            </flux:modal>
         </div>
 
     @endif

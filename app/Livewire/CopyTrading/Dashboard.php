@@ -324,6 +324,7 @@ class Dashboard extends Component
         $setting->update([
             'is_running' => true,
             'is_active' => true,
+            'session_started_at' => now(),
         ]);
 
         // Dispatch the listener immediately; EnsureListenersRunning will restart
@@ -435,32 +436,47 @@ class Dashboard extends Component
             ->get();
     }
 
+    /** Latest 10 trades for the transactions table. */
     #[Computed]
     public function trades(): Collection
     {
-        return CopyTrade::query()
-            ->where('user_id', auth()->id())
-            ->orderByDesc('traded_at')
-            ->limit(100)
-            ->get();
+        $query = CopyTrade::query()
+            ->where('user_id', auth()->id());
+
+        $sessionStart = $this->setting?->session_started_at;
+
+        if ($sessionStart) {
+            $query->where('traded_at', '>=', $sessionStart);
+        }
+
+        return $query->orderByDesc('traded_at')->limit(10)->get();
     }
 
+    /** Aggregate stats for the full current session (no row limit). */
     #[Computed]
     public function stats(): array
     {
-        $trades = $this->trades;
-        $wins = $trades->where('is_win', true);
-        $losses = $trades->where('is_win', false);
+        $query = CopyTrade::query()->where('user_id', auth()->id());
+
+        $sessionStart = $this->setting?->session_started_at;
+
+        if ($sessionStart) {
+            $query->where('traded_at', '>=', $sessionStart);
+        }
+
+        $wins = (clone $query)->where('is_win', true)->count();
+        $losses = (clone $query)->where('is_win', false)->count();
+        $total = $wins + $losses;
 
         return [
-            'trade_count' => $trades->count(),
-            'win_count' => $wins->count(),
-            'loss_count' => $losses->count(),
-            'total_stake' => $trades->sum('stake'),
-            'total_payout' => $trades->sum('payout'),
-            'total_profit' => $trades->sum('profit'),
-            'contracts_won' => $wins->count(),
-            'contracts_lost' => $losses->count(),
+            'trade_count' => $total,
+            'win_count' => $wins,
+            'loss_count' => $losses,
+            'total_stake' => (float) (clone $query)->sum('stake'),
+            'total_payout' => (float) (clone $query)->sum('payout'),
+            'total_profit' => (float) (clone $query)->sum('profit'),
+            'contracts_won' => $wins,
+            'contracts_lost' => $losses,
         ];
     }
 
