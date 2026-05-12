@@ -163,7 +163,7 @@ class DerivApiService
             ];
 
             if (isset($params['barrier']) && str_starts_with($params['contract_type'], 'DIGIT')) {
-                $proposal['last_digit'] = (int) $params['barrier'];
+                $proposal['barrier'] = $params['barrier'];
             }
 
             Log::debug('buyContract proposal', $proposal);
