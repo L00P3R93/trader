@@ -77,18 +77,26 @@ class CopyTradeJob implements ShouldQueue
                     'follower_account_id' => $setting->follower_account_id,
                 ]);
 
-                CopyTrade::create([
+                $followerContractId = (string) ($result['buy']['contract_id'] ?? '');
+
+                $copyTrade = CopyTrade::create([
                     'user_id' => $setting->user_id,
                     'master_connection_id' => $this->masterConnectionId,
                     'follower_trx_id' => $result['buy']['transaction_id'] ?? null,
+                    'follower_contract_id' => $followerContractId ?: null,
                     'master_trx_id' => $this->masterTrade['transaction_id'] ?? null,
                     'symbol' => $symbol,
                     'contract_type' => $this->masterTrade['contract_type'] ?? null,
                     'duration' => ($this->masterTrade['duration'] ?? '').($this->masterTrade['duration_unit'] ?? ''),
-                    'barrier' => $this->masterTrade['contract_type'] ?? null,
+                    'barrier' => $this->masterTrade['barrier'] ?? null,
                     'stake' => $stake,
                     'traded_at' => now(),
                 ]);
+
+                if ($followerContractId) {
+                    SettleCopyTradeJob::dispatch($copyTrade->id, $followerConnection->id, $followerContractId)
+                        ->delay(now()->addSeconds(5));
+                }
             } catch (\Throwable $e) {
                 Log::error("CopyTradeJob failed for user {$setting->user_id}: {$e->getMessage()}");
             }

@@ -139,6 +139,7 @@
                         <table class="w-full text-sm">
                             <thead class="bg-[#111827]">
                                 <tr>
+                                    <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Txn ID</th>
                                     <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Type</th>
                                     <th class="px-4 py-3 text-right font-medium text-zinc-500 dark:text-zinc-400">Amount</th>
                                     <th class="px-4 py-3 text-right font-medium text-zinc-500 dark:text-zinc-400">Balance After</th>
@@ -152,6 +153,9 @@
                                         $actionType = $txn['action_type'] ?? '';
                                     @endphp
                                     <tr class="hover:bg-[#111827]/50">
+                                        <td class="px-4 py-3 font-mono text-xs text-zinc-500">
+                                            {{ $txn['transaction_id'] ?? '—' }}
+                                        </td>
                                         <td class="px-4 py-3">
                                             @php
                                                 $typeColor = match($actionType) {

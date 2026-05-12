@@ -141,6 +141,18 @@ class DerivApiService
         return $this->cachedCall($connection, 'portfolio', 30, fn () => $this->wsCall($connection->access_token, ['portfolio' => 1]));
     }
 
+    /** Fetch current details for a single contract (used to settle copy trades). */
+    public function getContractDetails(DerivConnection $connection, string $contractId): array
+    {
+        $response = $this->wsCall($connection->access_token, [
+            'proposal_open_contract' => 1,
+            'contract_id' => (int) $contractId,
+            'req_id' => 1,
+        ]);
+
+        return $response['proposal_open_contract'] ?? [];
+    }
+
     /**
      * Buy a contract on behalf of a follower.
      * Fetches a price proposal then immediately buys it.

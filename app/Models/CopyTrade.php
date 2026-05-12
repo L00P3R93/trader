@@ -16,6 +16,7 @@ class CopyTrade extends Model
         'user_id',
         'master_connection_id',
         'follower_trx_id',
+        'follower_contract_id',
         'master_trx_id',
         'symbol',
         'contract_type',
