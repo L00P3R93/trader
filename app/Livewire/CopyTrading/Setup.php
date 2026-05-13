@@ -6,7 +6,9 @@ use App\Exceptions\DerivApiException;
 use App\Models\CopySetting;
 use App\Models\DerivConnection;
 use App\Services\DerivApiService;
+use App\Services\DerivLegacyApiService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -22,6 +24,12 @@ class Setup extends Component
     public ?string $followerAccountId = null;
 
     public bool $showForm = false;
+
+    public string $patToken = '';
+
+    public ?string $patError = null;
+
+    public ?string $patSuccess = null;
 
     public function mount(): void
     {
@@ -112,6 +120,83 @@ class Setup extends Component
         session()->flash('success', 'Copy trading disconnected.');
     }
 
+    public function connectViaPat(): void
+    {
+        $this->patError = null;
+        $this->patSuccess = null;
+
+        $this->validate(['patToken' => ['required', 'string', 'min:10']]);
+
+        // Try the new REST API first (works for new-style PATs).
+        $tokenType = $this->tryNewRestApi($this->patToken);
+
+        // If the new REST API rejects it, fall back to the legacy WebSocket API.
+        if ($tokenType === null) {
+            $tokenType = $this->tryLegacyWsApi($this->patToken);
+        }
+
+        if ($tokenType === null) {
+            $this->patError = 'Invalid token. Your token was not accepted by Deriv. Please check it and try again.';
+
+            return;
+        }
+
+        DerivConnection::updateOrCreate(
+            ['user_id' => auth()->id()],
+            [
+                'access_token' => $this->patToken,
+                'token_type' => $tokenType,
+                'expires_at' => null,
+                'scope' => null,
+            ]
+        );
+
+        $this->patToken = '';
+        $this->patSuccess = 'Deriv account connected successfully.';
+
+        unset($this->followerAccounts);
+    }
+
+    /**
+     * Try validating the PAT against the new REST API.
+     * Returns 'pat' on success, null on 401/failure, throws on network error.
+     */
+    private function tryNewRestApi(string $token): ?string
+    {
+        try {
+            $response = Http::withHeaders([
+                'Deriv-App-ID' => (string) config('deriv.app_id_pat'),
+                'Authorization' => 'Bearer '.$token,
+                'Accept' => 'application/json',
+            ])->get('https://api.derivws.com/trading/v1/options/accounts');
+        } catch (\Throwable) {
+            $this->patError = 'Could not reach Deriv. Please check your connection and try again.';
+
+            return null;
+        }
+
+        if ($response->successful()) {
+            return 'pat';
+        }
+
+        return null;
+    }
+
+    /**
+     * Try validating the PAT against the legacy WebSocket API.
+     * Returns 'pat_legacy' on success, null if the token is invalid.
+     */
+    private function tryLegacyWsApi(string $token): ?string
+    {
+        try {
+            app(DerivLegacyApiService::class)->authorize($token);
+
+            return 'pat_legacy';
+        } catch (DerivApiException) {
+            return null;
+        }
+    }
+
     #[Computed]
     public function followerAccounts(): array
     {
@@ -122,6 +207,10 @@ class Setup extends Component
         }
 
         try {
+            if ($connection->token_type === 'pat_legacy') {
+                return app(DerivLegacyApiService::class)->getAccounts($connection);
+            }
+
             return app(DerivApiService::class)->getAccounts($connection);
         } catch (DerivApiException) {
             return [];

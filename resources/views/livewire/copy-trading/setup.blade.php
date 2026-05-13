@@ -1,5 +1,111 @@
 <div class="space-y-8">
 
+    {{-- Deriv Connection Prompt (shown when no account connected) --}}
+    @if(! auth()->user()->hasDerivConnected())
+        <div class="rounded-xl border border-[#1F2937] bg-[#0B1220]">
+            <div class="border-b border-[#1F2937] px-6 py-4">
+                <flux:heading size="lg">Connect Your Deriv Account</flux:heading>
+                <flux:text class="mt-0.5 text-sm text-zinc-500">
+                    You need a Deriv account connection to copy trades.
+                </flux:text>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr]">
+
+                {{-- OAuth2 option --}}
+                <div class="flex flex-col gap-3 px-6 py-6">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
+                            <flux:icon.arrow-top-right-on-square class="size-4 text-indigo-500" />
+                        </div>
+                        <flux:heading size="sm">OAuth2</flux:heading>
+                        <span class="rounded-full bg-[#CDF12B]/10 px-2 py-0.5 text-xs font-medium text-[#CDF12B]">
+                            Recommended
+                        </span>
+                    </div>
+                    <flux:text class="text-sm text-zinc-400">
+                        For <strong class="text-white">new Deriv accounts</strong>. Sign in securely
+                        via Deriv's website — no token copying required.
+                    </flux:text>
+                    <flux:button
+                        href="{{ route('deriv.connect') }}"
+                        variant="primary"
+                        icon="link"
+                        class="mt-auto w-full"
+                    >
+                        Connect via Deriv
+                    </flux:button>
+                </div>
+
+                {{-- OR separator --}}
+                <div class="flex items-center justify-center px-4 sm:flex-col">
+                    <div class="h-px w-full bg-[#1F2937] sm:h-full sm:w-px"></div>
+                    <span class="shrink-0 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-zinc-500 sm:px-0 sm:py-3">
+                        or
+                    </span>
+                    <div class="h-px w-full bg-[#1F2937] sm:h-full sm:w-px"></div>
+                </div>
+
+                {{-- PAT option --}}
+                <div class="flex flex-col gap-3 px-6 py-6">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                            <flux:icon.key class="size-4 text-amber-500" />
+                        </div>
+                        <flux:heading size="sm">Personal Access Token</flux:heading>
+                    </div>
+                    <flux:text class="text-sm text-zinc-400">
+                        For <strong class="text-white">legacy Deriv accounts</strong>. Deriv issues
+                        separate tokens for real and demo accounts — paste the one matching the
+                        account you want to copy trades with. Generate tokens in your
+                        <a href="https://app.deriv.com/account/api-token"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="underline underline-offset-2 text-zinc-300 hover:text-white"
+                        >Deriv account settings</a>.
+                    </flux:text>
+
+                    @if($patSuccess)
+                        <div class="flex items-center gap-2 rounded-lg border border-[#22C55E]/30 bg-[#22C55E]/10 px-3 py-2 text-sm text-[#22C55E]">
+                            <flux:icon.check-circle class="size-4 shrink-0" />
+                            {{ $patSuccess }}
+                        </div>
+                    @endif
+
+                    @if($patError)
+                        <div class="flex items-center gap-2 rounded-lg border border-red-800/40 bg-red-900/20 px-3 py-2 text-sm text-red-400">
+                            <flux:icon.x-circle class="size-4 shrink-0" />
+                            {{ $patError }}
+                        </div>
+                    @endif
+
+                    @error('patToken')
+                        <p class="text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+
+                    <div class="mt-auto flex flex-col gap-2">
+                        <flux:input
+                            type="password"
+                            wire:model="patToken"
+                            placeholder="Paste your API token here"
+                        />
+                        <flux:button
+                            wire:click="connectViaPat"
+                            wire:loading.attr="disabled"
+                            wire:target="connectViaPat"
+                            variant="ghost"
+                            icon="key"
+                            class="w-full"
+                        >
+                            <span wire:loading.remove wire:target="connectViaPat">Connect with Token</span>
+                            <span wire:loading wire:target="connectViaPat">Verifying…</span>
+                        </flux:button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Current Setup Banner --}}
     @if($this->currentSetting)
         @php $setting = $this->currentSetting; @endphp
