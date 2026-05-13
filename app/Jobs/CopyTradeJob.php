@@ -9,6 +9,7 @@ use App\Services\DerivApiService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class CopyTradeJob implements ShouldQueue
 {
@@ -45,10 +46,10 @@ class CopyTradeJob implements ShouldQueue
                 continue;
             }
 
-            $recentOutcomes = $this->getRecentOutcomes($setting->user_id, $this->masterConnectionId);
+            $recentOutcomes = $this->getRecentOutcomes($this->masterConnectionId);
 
             if (! $setting->matchesPattern($recentOutcomes)) {
-                Log::debug("Pattern not matched for user {$setting->user_id}, skipping.");
+                Log::debug("Pattern not matched for user {$setting->user_id}, skipping.", ['master_outcomes' => $recentOutcomes, 'pattern' => $setting->follower_pattern]);
 
                 continue;
             }
@@ -103,19 +104,13 @@ class CopyTradeJob implements ShouldQueue
         }
     }
 
-    private function getRecentOutcomes(int $userId, int $masterConnectionId): array
+    private function getRecentOutcomes(int $masterConnectionId): array
     {
-        return CopyTrade::query()
-            ->where('user_id', $userId)
-            ->where('master_connection_id', $masterConnectionId)
-            ->whereNotNull('is_win')
-            ->orderByDesc('traded_at')
-            ->limit(20)
-            ->pluck('is_win')
-            ->reverse()
-            ->map(fn ($win) => $win ? 1 : 0)
-            ->values()
-            ->toArray();
+        // Read master's actual trade outcomes from Redis (recorded by ListenMasterAccount on 'sell' events).
+        // LPUSH stores newest-first, so reverse to get chronological order for pattern matching.
+        $raw = Redis::lrange("master_outcomes:{$masterConnectionId}", 0, 19);
+
+        return array_reverse(array_map('intval', $raw));
     }
 
     private function shouldFilterTrade(CopySetting $setting): bool

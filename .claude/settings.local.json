@@ -99,7 +99,8 @@
       "Bash(findstr APP_NAME)",
       "Bash(powershell -Command \"\\(Get-Content .env\\) -replace '^APP_NAME=.*', 'APP_NAME=\\\\\"Fully Automated Bots CT\\\\\"' | Set-Content .env -Encoding utf8\")",
       "Bash(Select-Object Name)",
-      "mcp__laravel-boost__read-log-entries"
+      "mcp__laravel-boost__read-log-entries",
+      "mcp__laravel-boost__database-query"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -8,6 +8,7 @@ use App\Models\DerivConnection;
 use App\Services\DerivApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class ListenMasterAccount extends Command
 {
@@ -147,6 +148,17 @@ class ListenMasterAccount extends Command
         if ($msgType === 'transaction') {
             $transaction = $message['transaction'] ?? [];
             $action = $transaction['action'] ?? '';
+
+            if ($action === 'sell') {
+                $amount = (float) ($transaction['amount'] ?? 0);
+                $isWin = $amount > 0 ? 1 : 0;
+                $key = "master_outcomes:{$connectionId}";
+                Redis::lpush($key, $isWin);
+                Redis::ltrim($key, 0, 49);
+                Log::debug("Master sell recorded for connection #{$connectionId}", ['is_win' => $isWin, 'amount' => $amount]);
+
+                return;
+            }
 
             if ($action !== 'buy') {
                 return;
