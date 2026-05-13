@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fully Automated Bots CT — Copy the Best Traders. Automatically.</title>
-    <meta name="description" content="Connect your Deriv account, follow top traders, and let Fully Automated Bots CT mirror every trade in real time.">
+    <title>Fully Automated Bots CT — Copy the Best Trades. Demo Account to Real Account.</title>
+    <meta name="description" content="No VPS. No desktop software. Connect your Deriv demo and real accounts and let our web-based platform copy trades automatically, 24/7.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -110,7 +110,7 @@
                         Login
                     </a>
                     <a href="{{ route('register') }}" class="px-4 py-2 rounded-lg bg-[#CDF12B] text-[#0B1220] text-sm font-bold hover:bg-[#b8d826] transition-colors shadow-lg shadow-[#CDF12B]/20">
-                        Get Started Free
+                        Start Free
                     </a>
                 @endauth
             </div>
@@ -147,7 +147,7 @@
                     <a href="{{ route('dashboard') }}" class="px-4 py-3 rounded-lg bg-[#CDF12B] text-[#0B1220] text-sm font-bold text-center">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}"    class="px-4 py-3 rounded-lg border border-[#1F2937] text-sm text-zinc-300 text-center">Login</a>
-                    <a href="{{ route('register') }}" class="px-4 py-3 rounded-lg bg-[#CDF12B] text-[#0B1220] text-sm font-bold text-center">Get Started Free</a>
+                    <a href="{{ route('register') }}" class="px-4 py-3 rounded-lg bg-[#CDF12B] text-[#0B1220] text-sm font-bold text-center">Start Free</a>
                 @endauth
             </div>
         </div>
@@ -182,20 +182,20 @@
                 {{-- Headline --}}
                 <h1 class="slide-up-2 text-4xl sm:text-5xl lg:text-6xl xl:text-[4.5rem] font-extrabold tracking-tight leading-[1.1] mb-6">
                     Copy the Best<br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#1E45FC] via-[#6B8AFF] to-[#8FAEFF]">Traders.</span><br>
-                    Automatically.
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#1E45FC] via-[#6B8AFF] to-[#8FAEFF]">Trades.</span><br>
+                    Demo to Real.
                 </h1>
 
                 {{-- Subheadline --}}
                 <p class="slide-up-3 text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-9">
-                    Connect your Deriv account, choose a master trader, configure your trade pattern and stake settings, and let our platform mirror every trade to your account in real time — automatically.
+                    Say goodbye to complex desktop installations and VPS setups. Our newly developed web-based system gives you full control of your copy trading from any device. Designed to adapt seamlessly to the latest Deriv API environments, it ensures your connection remains stable, secure, and uninterrupted 24/7.
                 </p>
 
                 {{-- CTA buttons --}}
                 <div class="slide-up-4 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-10">
                     @guest
                         <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#CDF12B] text-[#0B1220] font-bold text-base hover:bg-[#b8d826] transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-[#CDF12B]/30">
-                            Start Copying Trades
+                            Start for Free
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                             </svg>
@@ -224,7 +224,7 @@
                     <span class="hidden sm:block w-px h-3 bg-[#1F2937]"></span>
                     <span>📊 Live P&L Tracking</span>
                     <span class="hidden sm:block w-px h-3 bg-[#1F2937]"></span>
-                    <span>💰 Earn While You Sleep</span>
+                    <span>🖥️ No VPS or Desktop App</span>
                 </div>
             </div>
 
@@ -333,10 +333,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-10">
             @foreach ([
-                ['500+',  'Active Traders'],
-                ['$2.4M+','Volume Copied'],
-                ['98%',   'Platform Uptime'],
+                ['100%',  'Web-Based — No VPS Needed'],
                 ['< 3s',  'Avg Copy Speed'],
+                ['98%',   'Platform Uptime'],
+                ['24/7',  'Uninterrupted Connection'],
             ] as [$num, $label])
             <div class="text-center">
                 <p class="text-3xl lg:text-4xl font-extrabold text-[#1E45FC] mb-1.5 tabular-nums">{{ $num }}</p>
@@ -359,32 +359,29 @@
         <div class="grid lg:grid-cols-2 gap-12 xl:gap-20 items-start">
             <div class="space-y-5 text-zinc-400 text-base leading-relaxed">
                 <p>
-                    Fully Automated Bots CT is a fully automated copy trading platform that connects directly to
-                    <span class="text-white font-semibold">Deriv via official OAuth</span>.
-                    No API key pasting, no third-party bridges — just a secure one-click authorization that links your Deriv account in seconds.
+                    Fully Automated Bots CT is a web-based copy trading platform built directly on the
+                    <span class="text-white font-semibold">Deriv API</span>. Link your Deriv demo and real accounts, configure your settings, and the platform automatically copies trades from your demo account to your real account — no VPS, no desktop software, no complicated setup.
                 </p>
                 <p>
-                    Connect your Deriv account and choose a master trader from the platform. Configure
-                    your copy settings — including a <span class="text-white font-semibold">trade pattern filter</span> that defines a win/loss sequence the master must have matched before copying activates — and start copying with a single click.
+                    Use your <span class="text-white font-semibold">demo account as the source</span> to test strategies risk-free, while your real account follows and executes the same trades live. Perfect for validating signals before committing real capital.
                 </p>
                 <p>
-                    Your funds <span class="text-white font-semibold">never leave your Deriv account</span>.
-                    Trades execute inside your personal Deriv account using your own authorization. We never hold balances,
-                    never pool funds, and never touch your money directly.
+                    Connect using <span class="text-white font-semibold">Deriv OAuth</span> with one click, or paste a <span class="text-white font-semibold">Personal Access Token</span> directly — whichever you prefer. Your token is stored encrypted at rest and is never readable in plain text.
                 </p>
                 <p>
-                    Your OAuth access token is stored encrypted at rest. Your live balance, trade history, and P&L
-                    are fetched in real time directly from Deriv — both Options and CFD accounts, demo and real.
+                    Your funds <span class="text-white font-semibold">never leave your Deriv account</span>. View live account summaries, real-time trade activity, and full P&L breakdowns from a single dashboard — your data fetched directly from Deriv, always up to date.
                 </p>
             </div>
             <div class="space-y-3">
                 @foreach ([
-                    'One-click Deriv OAuth — no API key copy-pasting',
-                    'Encrypted OAuth token storage, never readable in plain text',
-                    'Your funds stay in YOUR Deriv account always',
-                    'Trade pattern filter — define a win/loss sequence that triggers copying',
-                    'Options and CFD accounts, demo and real — all in one dashboard',
-                    'Pause or disconnect from a master any time, instantly',
+                    'Self-copy trading — Demo account drives your Real account',
+                    'Connect via Deriv OAuth or Personal Access Token',
+                    'Encrypted token storage — AES-256, never readable in plain text',
+                    'Your funds stay in YOUR Deriv account at all times',
+                    'Slave pattern filter — define the win/loss sequence before copying activates',
+                    'Live account summaries: balance, P&L, and real-time trade feed',
+                    'Take profit and stop loss — bot pauses automatically when limits are hit',
+                    'Pause or stop copying at any time, instantly from your dashboard',
                 ] as $feature)
                 <div class="flex items-center gap-3 p-4 rounded-xl bg-[#0B1220]/60 border border-[#1F2937] hover:border-[#1E45FC]/30 transition-colors">
                     <div class="flex-shrink-0 w-6 h-6 rounded-full bg-[#1E45FC]/15 border border-[#1E45FC]/30 flex items-center justify-center">
@@ -407,48 +404,63 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <p class="text-[#1E45FC] text-xs font-bold uppercase tracking-widest mb-3">Services</p>
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Everything You Need to Trade Smarter</h2>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Everything You Need to Copy Smarter</h2>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach ([
                 [
-                    'title' => 'Real-Time Copy Trading',
-                    'desc'  => 'When a master places a trade on Deriv, our platform mirrors it to every active follower automatically — straight from their account to yours via the official WebSocket API.',
-                    'icon'  => 'M13 10V3L4 14h7v7l9-11h-7z',
+                    'title'    => 'Demo-to-Real Copy Trading',
+                    'desc'     => 'Your Deriv demo account acts as the source — every trade it places is mirrored to your real account in real time via the official Deriv WebSocket API. Test strategies risk-free, then run them live automatically.',
+                    'icon'     => 'M13 10V3L4 14h7v7l9-11h-7z',
+                    'soon'     => false,
                 ],
                 [
-                    'title' => 'Trade Pattern Filter',
-                    'desc'  => 'Define a custom win/loss pattern — e.g. "111" for three consecutive wins — that must match the master\'s recent trade history before copying activates. Keeps you out of cold streaks automatically.',
-                    'icon'  => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                    'title'    => 'Slave Pattern Filter',
+                    'desc'     => 'Define a custom win/loss sequence — e.g. "111" for three consecutive wins — that must match before copying activates on your real account. Keeps you out of cold streaks automatically.',
+                    'icon'     => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                    'soon'     => false,
                 ],
                 [
-                    'title' => 'Live P&L Dashboard',
-                    'desc'  => 'Track every trade with real-time win rate, total P&L, best and worst trade, and average stake — calculated live from your Deriv profit table and account statement.',
-                    'icon'  => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                    'title'    => 'Live P&L Dashboard',
+                    'desc'     => 'Track every trade with real-time win rate, total P&L, best and worst trade, and average stake — pulled live from your Deriv account statement the moment each trade settles.',
+                    'icon'     => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                    'soon'     => false,
                 ],
                 [
-                    'title' => 'Options & CFD Accounts',
-                    'desc'  => 'View and manage all your Deriv account types in one place — Options and CFD accounts, real and demo — with live balances and a one-click demo balance reset.',
-                    'icon'  => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+                    'title'    => 'Demo & Real Account Management',
+                    'desc'     => 'View both your demo and real Deriv accounts side-by-side with live balances and a real-time transaction feed. Switch accounts, reset demo balance, and monitor all activity from one place.',
+                    'icon'     => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+                    'soon'     => false,
                 ],
                 [
-                    'title' => 'Secure Deriv OAuth',
-                    'desc'  => 'Authorize your Deriv account with one click via official OAuth — no API key copy-pasting. Your access token is stored encrypted and refreshed automatically.',
-                    'icon'  => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
+                    'title'    => 'Flexible Connection — OAuth & PAT',
+                    'desc'     => 'Authorize with one click via Deriv OAuth, or connect directly using a Personal Access Token. Your credentials are stored with AES-256 encryption and never exposed in plain text.',
+                    'icon'     => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
+                    'soon'     => false,
                 ],
                 [
-                    'title' => 'Flexible Stake & Risk Controls',
-                    'desc'  => 'Set a fixed stake, mirror the master\'s exact stake amount, or apply a multiplier. Add take profit and stop loss thresholds per session, enable Martingale after losses, and filter which markets are copied.',
-                    'icon'  => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                    'title'    => 'Stake, Take Profit & Stop Loss',
+                    'desc'     => 'Set a fixed stake amount, configure take profit and stop loss limits per session, and let the bot pause automatically when thresholds are hit. All settings can be updated at any time.',
+                    'icon'     => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                    'soon'     => false,
+                ],
+                [
+                    'title'    => 'Copy From Platform Masters',
+                    'desc'     => 'Follow verified master traders on the platform and let our system mirror their trades to your account automatically — with full control over stake, risk, and pattern settings.',
+                    'icon'     => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+                    'soon'     => true,
                 ],
             ] as $card)
-            <div class="group p-6 rounded-2xl bg-[#0B1220] border border-[#1F2937] hover:border-[#1E45FC]/30 hover:shadow-[0_0_40px_rgba(30,69,252,0.07)] transition-all duration-300 hover:scale-[1.02] cursor-default">
-                <div class="w-11 h-11 rounded-xl bg-[#1E45FC]/10 flex items-center justify-center mb-5 group-hover:bg-[#1E45FC]/15 transition-colors">
-                    <svg class="w-5 h-5 text-[#1E45FC]" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <div class="group relative p-6 rounded-2xl bg-[#0B1220] border {{ $card['soon'] ? 'border-[#1F2937]/50 opacity-70' : 'border-[#1F2937] hover:border-[#1E45FC]/30 hover:shadow-[0_0_40px_rgba(30,69,252,0.07)] hover:scale-[1.02]' }} transition-all duration-300 cursor-default">
+                @if($card['soon'])
+                    <div class="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-zinc-700/60 border border-zinc-600/40 text-[10px] font-bold uppercase tracking-wide text-zinc-400">Coming Soon</div>
+                @endif
+                <div class="w-11 h-11 rounded-xl {{ $card['soon'] ? 'bg-zinc-800/60' : 'bg-[#1E45FC]/10 group-hover:bg-[#1E45FC]/15' }} flex items-center justify-center mb-5 transition-colors">
+                    <svg class="w-5 h-5 {{ $card['soon'] ? 'text-zinc-500' : 'text-[#1E45FC]' }}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                         <path d="{{ $card['icon'] }}"/>
                     </svg>
                 </div>
-                <h3 class="text-sm font-bold text-white mb-2">{{ $card['title'] }}</h3>
+                <h3 class="text-sm font-bold {{ $card['soon'] ? 'text-zinc-400' : 'text-white' }} mb-2">{{ $card['title'] }}</h3>
                 <p class="text-sm text-zinc-500 leading-relaxed">{{ $card['desc'] }}</p>
             </div>
             @endforeach
@@ -460,34 +472,73 @@
      HOW IT WORKS SECTION
 ═══════════════════════════════════════════ --}}
 <section id="how-it-works" class="py-24 bg-[#020617]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-5">
             <p class="text-[#1E45FC] text-xs font-bold uppercase tracking-widest mb-3">Process</p>
             <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">Up and Running in Minutes</h2>
         </div>
         <p class="text-center text-zinc-500 text-lg mb-16">No complicated setup. No coding. Just connect and copy.</p>
 
-        {{-- Steps --}}
-        <div class="relative">
-            {{-- Desktop connector line --}}
-            <div class="hidden lg:block absolute top-7 left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-[#1F2937] to-transparent pointer-events-none"></div>
+        {{-- Steps: vertical timeline --}}
+        <div class="relative space-y-4">
+            {{-- Vertical connector --}}
+            <div class="absolute left-6 top-14 bottom-14 w-px bg-gradient-to-b from-[#CDF12B]/40 via-[#1F2937] to-transparent pointer-events-none hidden sm:block"></div>
 
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 relative">
-                @foreach ([
-                    ['01', 'Create Your Account',         'Sign up free and verify your email. Takes less than 60 seconds — no credit card required.'],
-                    ['02', 'Authorize via Deriv OAuth',   'Click "Connect Deriv Account" and authorize through Deriv\'s official OAuth flow. No API keys to copy or paste — your token is stored encrypted automatically.'],
-                    ['03', 'Choose a Master & Configure', 'Browse available masters on the platform and select one to follow. Set your stake amount, trade pattern filter, take profit / stop loss, and market filters. All settings can be changed at any time.'],
-                    ['04', 'Trades Mirror Automatically',  'Sit back. Every trade the master places on Deriv is mirrored to your account in real time. Your live balance and P&L update instantly on your dashboard.'],
-                ] as [$num, $title, $desc])
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-14 h-14 rounded-full bg-[#CDF12B] flex items-center justify-center text-[#0B1220] font-extrabold text-sm shadow-lg shadow-[#CDF12B]/30 mb-5 relative z-10 flex-shrink-0">
-                        {{ $num }}
-                    </div>
-                    <h3 class="text-sm font-bold text-white mb-2">{{ $title }}</h3>
-                    <p class="text-sm text-zinc-500 leading-relaxed">{{ $desc }}</p>
+            {{-- Step 01 --}}
+            <div class="relative flex gap-6 items-start p-6 rounded-2xl bg-[#0B1220] border border-[#1F2937]">
+                <div class="w-12 h-12 rounded-full bg-[#CDF12B] flex items-center justify-center text-[#0B1220] font-extrabold text-sm shadow-lg shadow-[#CDF12B]/30 flex-shrink-0 relative z-10">01</div>
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-1">Create Your Account</h3>
+                    <p class="text-sm text-zinc-500 leading-relaxed">
+                        Sign up free and verify your email — under 60 seconds, no credit card required.
+                        No Deriv account yet? <a href="https://track.deriv.com/_Ed6zZUkRQYaX6ytsi48cKWNd7ZgqdRLk/1/" target="_blank" rel="noopener" class="text-[#CDF12B] hover:underline font-semibold">Create one free here</a>.
+                    </p>
                 </div>
-                @endforeach
             </div>
+
+            {{-- Step 02 --}}
+            <div class="relative flex gap-6 items-start p-6 rounded-2xl bg-[#0B1220] border border-[#1F2937]">
+                <div class="w-12 h-12 rounded-full bg-[#CDF12B] flex items-center justify-center text-[#0B1220] font-extrabold text-sm shadow-lg shadow-[#CDF12B]/30 flex-shrink-0 relative z-10">02</div>
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-1">Connect Your Deriv Account</h3>
+                    <p class="text-sm text-zinc-500 leading-relaxed">
+                        Use one-click Deriv OAuth or paste a Personal Access Token. Credentials are encrypted at rest — never stored in plain text.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Step 03 --}}
+            <div class="relative flex gap-6 items-start p-6 rounded-2xl bg-[#0B1220] border border-[#1F2937]">
+                <div class="w-12 h-12 rounded-full bg-[#CDF12B] flex items-center justify-center text-[#0B1220] font-extrabold text-sm shadow-lg shadow-[#CDF12B]/30 flex-shrink-0 relative z-10">03</div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-bold text-white mb-2">Configure Accounts & Settings</h3>
+                    <p class="text-sm text-zinc-500 leading-relaxed mb-3">
+                        Master Account = Demo · Follower Account = Real. Set your Slave Pattern, Stake, Take Profit, and Stop Loss — all adjustable at any time.
+                    </p>
+                    <div class="grid sm:grid-cols-2 gap-2">
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#111827] border border-[#1F2937]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#CDF12B] flex-shrink-0"></span>
+                            <span class="text-xs text-zinc-400"><span class="text-zinc-200 font-medium">Testing:</span> select Master Account twice (Demo)</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#111827] border border-[#1F2937]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#1E45FC] flex-shrink-0"></span>
+                            <span class="text-xs text-zinc-400"><span class="text-zinc-200 font-medium">Live trading:</span> select Master + Follower Account</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Step 04 --}}
+            <div class="relative flex gap-6 items-start p-6 rounded-2xl bg-[#0B1220] border border-[#1E45FC]/30">
+                <div class="w-12 h-12 rounded-full bg-[#CDF12B] flex items-center justify-center text-[#0B1220] font-extrabold text-sm shadow-lg shadow-[#CDF12B]/30 flex-shrink-0 relative z-10">04</div>
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-1">Trades Copy Automatically</h3>
+                    <p class="text-sm text-zinc-500 leading-relaxed">
+                        Trades copy in real time following your Slave Pattern. Your balance and P&L update instantly on the dashboard.
+                    </p>
+                </div>
+            </div>
+
         </div>
 
         {{-- CTA card --}}
@@ -496,7 +547,7 @@
             <div class="relative">
                 <h3 class="text-2xl sm:text-3xl font-extrabold text-white mb-3">Ready to start?</h3>
                 <p class="text-zinc-400 text-base max-w-md mx-auto mb-8">
-                    Join hundreds of traders copying smarter. Free to get started — no credit card required.
+                    Start copying your demo trades to your real account today. Free to get started — no credit card required.
                 </p>
                 @guest
                     <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#CDF12B] text-[#0B1220] font-bold text-base hover:bg-[#b8d826] transition-all hover:scale-[1.03] shadow-lg shadow-[#CDF12B]/30">
@@ -531,15 +582,23 @@
             @foreach ([
                 [
                     'q' => 'Is my Deriv account safe?',
-                    'a' => "Yes. Your Deriv API token is stored using Laravel's encrypted cast — AES-256-CBC encryption — so even if our database were compromised, your token would be completely unreadable. Trades are always executed inside YOUR Deriv account via your own token. We never hold your funds, never move money between accounts, and never have access beyond what the token permits.",
+                    'a' => "Yes. Your Deriv credentials are stored using AES-256-CBC encryption — so even if our database were compromised, your token would be completely unreadable. Trades are always executed inside YOUR Deriv account via your own token. We never hold your funds, never move money between accounts, and never have access beyond what the token permits.",
                 ],
                 [
-                    'q' => 'How does the real-time copying actually work?',
-                    'a' => "Our server maintains a persistent Deriv WebSocket connection for each active master via a background queue job. The moment a master's trade is detected, a copy job fans out simultaneously to every active follower — each trade is placed in the follower's Deriv account within seconds, completely automatically. A heartbeat system monitors the connection and restarts it automatically if it drops.",
+                    'q' => 'What is the difference between the Master Account and Follower Account?',
+                    'a' => "In this platform, Master Account = Demo Account and Follower Account = Real Account. Your demo account acts as the signal source — every trade it places is mirrored to your real account automatically. For testing, you can set both Master and Follower to the same demo account. For live trading, set the Master to your demo account and the Follower to your real account.",
+                ],
+                [
+                    'q' => 'What is the Slave Pattern and how do I set it?',
+                    'a' => "The Slave Pattern is a win/loss filter — e.g. '111' means three consecutive wins must occur on the master (demo) account before copying activates on the follower (real) account. This keeps your real account out of cold streaks. You set it during setup and can change it at any time from your dashboard.",
+                ],
+                [
+                    'q' => 'How does the real-time copying work?',
+                    'a' => "Our server maintains a persistent Deriv WebSocket connection for your master (demo) account. The moment a trade is detected, a copy job places the same trade on your follower (real) account within seconds — completely automatically. A heartbeat system monitors the connection and restarts it if it ever drops.",
                 ],
                 [
                     'q' => 'How fast are trades copied?',
-                    'a' => "Typically under 3 seconds. Our persistent WebSocket connection means we receive trade events from Deriv the moment they happen — there is no polling or delay. A queued job then fans out to all followers in parallel. Final speed depends on network latency and Deriv's own execution time.",
+                    'a' => "Typically under 3 seconds. Our persistent WebSocket connection receives trade events from Deriv the moment they happen — there is no polling delay. Final speed depends on network latency and Deriv's own execution time.",
                 ],
                 [
                     'q' => 'How much does it cost?',
@@ -547,19 +606,15 @@
                 ],
                 [
                     'q' => 'Can I set limits to protect my capital?',
-                    'a' => "Yes. Each copy session supports a take profit target and a stop loss threshold — the bot pauses automatically when either is reached. You can also cap Martingale progression, restrict which markets are copied (Volatility indices, Forex pairs, or specific synthetic instruments), and manually pause or stop the bot at any time from your dashboard.",
-                ],
-                [
-                    'q' => 'What stake sizing options are available?',
-                    'a' => "Three main options: Fixed (a set dollar amount per trade), Follow Master Stake (mirror the master's exact stake amount on each trade), or Multiplier (copy at a fixed multiple of your configured stake). You can also enable Martingale — automatically scaling up your stake after losses up to a configurable maximum, with a choice of what happens if that maximum is reached.",
-                ],
-                [
-                    'q' => 'Can I follow multiple masters at once?',
-                    'a' => "Yes. You can connect multiple Deriv follower accounts and link each to a different master trader, each with its own stake mode, loss limit, and copy settings. Accounts are isolated — risk limits and copy status on one do not affect the others.",
+                    'a' => "Yes. Each copy session supports a take profit target and a stop loss threshold — the bot pauses automatically when either is reached. You can update these limits at any time from your dashboard without restarting the session.",
                 ],
                 [
                     'q' => 'Can I pause or stop copying at any time?',
-                    'a' => "Yes. You can manually pause or completely disconnect from a master at any time directly from your dashboard — no delay, no waiting. Copying stops immediately. Your Deriv account and any open trades are completely unaffected.",
+                    'a' => "Yes. You can manually pause or stop copying at any time directly from your dashboard — no delay, no waiting. Copying stops immediately. Your Deriv account and any open trades are completely unaffected.",
+                ],
+                [
+                    'q' => 'Can I follow master traders from other users on the platform?',
+                    'a' => "This feature is coming soon. Currently the platform focuses on copying trades from your own demo account to your real account. Following platform masters will be available in a future release.",
                 ],
                 [
                     'q' => 'What is Deriv?',
@@ -612,7 +667,7 @@
                     <img src="/logo.svg" alt="Fully Automated Bots CT" class="h-9 w-auto">
                 </div>
                 <p class="text-sm text-zinc-500 leading-relaxed mb-5">
-                    The professional copy trading platform for Deriv traders. Automate your strategy, protect your capital.
+                    The web-based copy trading platform for Deriv traders. Demo to Real — automated, secure, 24/7.
                 </p>
                 <span class="inline-flex items-center gap-1.5 text-xs text-zinc-600 bg-[#0B1220] border border-[#1F2937] rounded-lg px-3 py-1.5">
                     <svg class="w-3 h-3 text-[#1E45FC]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
