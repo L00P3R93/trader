@@ -3,6 +3,7 @@
 namespace App\Livewire\CopyTrading;
 
 use App\Exceptions\DerivApiException;
+use App\Jobs\CopyTradeJob;
 use App\Jobs\MasterListenerJob;
 use App\Models\CopySetting;
 use App\Models\CopyTrade;
@@ -326,6 +327,10 @@ class Dashboard extends Component
             'is_active' => true,
             'session_started_at' => now(),
         ]);
+
+        // Clear per-session locks so the new session starts fresh
+        CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
+        Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
 
         // Dispatch the listener immediately; EnsureListenersRunning will restart
         // it within 1 minute if the queue worker isn't available yet.

@@ -314,22 +314,29 @@
             </div>
         </div>
 
-        {{-- ===== LISTENER STATUS ===== --}}
-        @if($setting->is_running)
-            <div @class([
-                'rounded-xl border px-5 py-3 flex items-center gap-3',
-                'border-[#22C55E]/30 bg-[#22C55E]/5' => $this->listenerAlive,
-                'border-amber-700/40 bg-amber-900/10' => !$this->listenerAlive,
-            ])>
-                @if($this->listenerAlive)
-                    <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#22C55E]"></span>
-                    <span class="text-sm font-medium text-[#22C55E]">Listener active</span>
-                @else
-                    <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-400"></span>
-                    <span class="text-sm font-medium text-amber-300">Listener starting…</span>
-                @endif
+        {{-- ===== LISTENER STATUS + MASTER OUTCOMES TICKER ===== --}}
+        <div class="flex flex-wrap items-center gap-4">
+            @if($setting->is_running)
+                <div @class([
+                    'flex flex-1 min-w-0 items-center gap-3 rounded-xl border px-4 py-3',
+                    'border-[#22C55E]/30 bg-[#22C55E]/5' => $this->listenerAlive,
+                    'border-amber-700/40 bg-amber-900/10' => !$this->listenerAlive,
+                ])>
+                    @if($this->listenerAlive)
+                        <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#22C55E]"></span>
+                        <span class="text-sm font-medium text-[#22C55E]">Listener active</span>
+                    @else
+                        <span class="inline-block h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-400"></span>
+                        <span class="text-sm font-medium text-amber-300">Listener starting…</span>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Last 10 master trade outcomes (real-time, polls every 3s) --}}
+            <div class="flex-1 min-w-0 rounded-xl border border-[#1F2937] bg-[#0B1220] px-4 py-3">
+                @livewire('copy-trading.master-outcomes-ticker', ['connectionId' => $setting->master_connection_id], key('ticker-'.$setting->master_connection_id))
             </div>
-        @endif
+        </div>
 
         {{-- ===== EXPANDABLE SETTINGS PANEL ===== --}}
         @if($settingsOpen)
@@ -795,14 +802,14 @@
                         <thead>
                             <tr class="border-b border-[#1F2937] text-zinc-400">
                                 <th class="px-4 py-3">#</th>
+                                <th class="px-4 py-3">Result</th>
                                 <th class="px-4 py-3">DateTime</th>
+                                <th class="px-4 py-3">Symbol</th>
                                 <th class="px-4 py-3">FollowerTrxID</th>
                                 <th class="px-4 py-3">Dur</th>
-                                <th class="px-4 py-3">Barr</th>
                                 <th class="px-4 py-3">Stake</th>
                                 <th class="px-4 py-3">Payout</th>
                                 <th class="px-4 py-3">Profit</th>
-                                <th class="px-4 py-3">SellAtMarket</th>
                                 <th class="px-4 py-3">MasterTrxID</th>
                             </tr>
                         </thead>
@@ -813,19 +820,33 @@
                                         'border-b border-[#1F2937]/50 transition-colors',
                                         'bg-[#0d2318]' => $trade->is_win === true,
                                         'bg-[#1a0d0d]' => $trade->is_win === false,
-                                        'hover:bg-[#111827]' => $trade->is_win === null,
+                                        'bg-[#0B1220] hover:bg-[#111827]' => $trade->is_win === null,
                                     ])>
                                     <td class="px-4 py-2 text-zinc-400">{{ $i + 1 }}</td>
+                                    <td class="px-4 py-2">
+                                        @if($trade->is_win === true)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-[#22C55E]/15 px-2 py-0.5 font-medium text-[#22C55E]">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>WIN
+                                            </span>
+                                        @elseif($trade->is_win === false)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-400">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-red-400"></span>LOSS
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-400">
+                                                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400"></span>Open
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-2 font-mono text-zinc-300">{{ $trade->traded_at?->format('Y-m-d H:i:s') ?? '—' }}</td>
+                                    <td class="px-4 py-2 font-mono text-zinc-300">{{ $trade->symbol ?? '—' }}</td>
                                     <td class="px-4 py-2 font-mono text-zinc-400">{{ $trade->follower_trx_id ?? '—' }}</td>
                                     <td class="px-4 py-2 text-zinc-300">{{ $trade->duration ?? '—' }}</td>
-                                    <td class="px-4 py-2 text-zinc-300">{{ $trade->barrier ?? '—' }}</td>
                                     <td class="px-4 py-2 font-medium text-white">{{ number_format($trade->stake, 2) }}</td>
                                     <td class="px-4 py-2 text-zinc-300">{{ $trade->payout !== null ? number_format($trade->payout, 2) : '—' }}</td>
                                     <td class="px-4 py-2 font-medium {{ $trade->profit !== null && $trade->profit >= 0 ? 'text-[#22C55E]' : 'text-red-400' }}">
-                                        {{ $trade->profit !== null ? number_format($trade->profit, 2) : '—' }}
+                                        {{ $trade->profit !== null ? ($trade->profit >= 0 ? '+' : '').number_format($trade->profit, 2) : '—' }}
                                     </td>
-                                    <td class="px-4 py-2 text-zinc-400">{{ $trade->sell_at_market ? 'Yes' : 'No' }}</td>
                                     <td class="px-4 py-2 font-mono text-zinc-400">{{ $trade->master_trx_id ?? '—' }}</td>
                                 </tr>
                             @endforeach

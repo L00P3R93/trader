@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class MasterListenerJob implements ShouldQueue
 {
@@ -144,8 +145,24 @@ class MasterListenerJob implements ShouldQueue
 
         if ($msgType === 'transaction') {
             $transaction = $message['transaction'] ?? [];
+            $action = $transaction['action'] ?? '';
 
-            if (($transaction['action'] ?? '') !== 'buy') {
+            if ($action === 'sell') {
+                $amount = (float) ($transaction['amount'] ?? 0);
+                $isWin = $amount > 0 ? 1 : 0;
+                $key = "master_outcomes:{$this->connectionId}";
+                Redis::lpush($key, $isWin);
+                Redis::ltrim($key, 0, 49);
+
+                // Reset per-user pattern-consumed locks so the next buy can trigger a fresh trade
+                CopyTradeJob::clearAllPatternConsumed($this->connectionId);
+
+                Log::debug("MasterListenerJob: sell recorded for connection #{$this->connectionId}", ['is_win' => $isWin]);
+
+                return;
+            }
+
+            if ($action !== 'buy') {
                 return;
             }
 

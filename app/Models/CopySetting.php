@@ -72,7 +72,7 @@ class CopySetting extends Model
         $length = strlen($pattern);
 
         if (count($recentOutcomes) < $length) {
-            return true;
+            return false;
         }
 
         $slice = array_slice($recentOutcomes, -$length);

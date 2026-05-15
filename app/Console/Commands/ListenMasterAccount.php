@@ -155,6 +155,10 @@ class ListenMasterAccount extends Command
                 $key = "master_outcomes:{$connectionId}";
                 Redis::lpush($key, $isWin);
                 Redis::ltrim($key, 0, 49);
+
+                // Reset per-user pattern-consumed locks so the next buy triggers a fresh trade
+                CopyTradeJob::clearAllPatternConsumed($connectionId);
+
                 Log::debug("Master sell recorded for connection #{$connectionId}", ['is_win' => $isWin, 'amount' => $amount]);
 
                 return;

@@ -2,10 +2,10 @@
 
 use App\Jobs\CopyTradeJob;
 use App\Models\CopySetting;
-use App\Models\CopyTrade;
 use App\Models\DerivConnection;
 use App\Models\User;
 use App\Services\DerivApiService;
+use Illuminate\Support\Facades\Redis;
 
 $masterTrade = [
     'transaction_id' => 111111,
@@ -113,12 +113,16 @@ test('skips follower with inactive settings', function () use ($masterTrade) {
     $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
 });
 
-test('allows copy when pattern is enabled but no trade history exists yet', function () use ($masterTrade) {
+test('allows copy when pattern matches master Redis outcomes', function () use ($masterTrade) {
     $master = makeMaster();
     makeFollower($master, [
         'pattern_enabled' => true,
         'follower_pattern' => '11',
     ]);
+
+    // Populate Redis with 2 wins (newest first in Redis, reversed for matching)
+    Redis::del("master_outcomes:{$master->id}");
+    Redis::lpush("master_outcomes:{$master->id}", 1, 1);
 
     $mock = $this->mock(DerivApiService::class);
     $mock->shouldReceive('buyContract')->once()->andReturn(['buy' => ['transaction_id' => 1]]);
@@ -126,35 +130,29 @@ test('allows copy when pattern is enabled but no trade history exists yet', func
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
     $this->assertDatabaseHas('copy_trades', ['master_connection_id' => $master->id]);
+
+    Redis::del("master_outcomes:{$master->id}");
 });
 
-test('skips follower when pattern does not match', function () use ($masterTrade) {
+test('skips follower when pattern does not match master Redis outcomes', function () use ($masterTrade) {
     $master = makeMaster();
-    $setting = makeFollower($master, [
+    makeFollower($master, [
         'pattern_enabled' => true,
         'follower_pattern' => '111',
     ]);
 
-    // 2 wins then 1 loss — pattern "110" does not match "111"
-    foreach ([true, true, false] as $isWin) {
-        CopyTrade::factory()->create([
-            'user_id' => $setting->user_id,
-            'master_connection_id' => $master->id,
-            'is_win' => $isWin,
-            'traded_at' => now()->subMinutes(rand(1, 60)),
-        ]);
-    }
+    // 2 wins then 1 loss in Redis — pattern "110" does not match "111"
+    Redis::del("master_outcomes:{$master->id}");
+    Redis::lpush("master_outcomes:{$master->id}", 0, 1, 1);
 
     $mock = $this->mock(DerivApiService::class);
     $mock->shouldNotReceive('buyContract');
 
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    // No new (open) trade should be created
-    $this->assertDatabaseMissing('copy_trades', [
-        'master_connection_id' => $master->id,
-        'is_win' => null,
-    ]);
+    $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
+
+    Redis::del("master_outcomes:{$master->id}");
 });
 
 test('skips follower when traded symbol is filtered out', function () use ($masterTrade) {

@@ -100,7 +100,10 @@
       "Bash(powershell -Command \"\\(Get-Content .env\\) -replace '^APP_NAME=.*', 'APP_NAME=\\\\\"Fully Automated Bots CT\\\\\"' | Set-Content .env -Encoding utf8\")",
       "Bash(Select-Object Name)",
       "mcp__laravel-boost__read-log-entries",
-      "mcp__laravel-boost__database-query"
+      "mcp__laravel-boost__database-query",
+      "Bash(findstr /E \"\\(DerivService|DerivApiService|RiskManager|DerivLegacy\\)\")",
+      "Bash(findstr /E \"\\(copy|deriv\\)\")",
+      "Skill(livewire-development)"
     ]
   },
   "enableAllProjectMcpServers": true,
