@@ -41,9 +41,21 @@ class MasterListenerJob implements ShouldQueue
 
         Log::info("MasterListenerJob starting for connection #{$this->connectionId}, account {$masterAccountId}");
 
+        $stopping = false;
+
+        if (extension_loaded('pcntl')) {
+            pcntl_async_signals(true);
+            pcntl_signal(SIGTERM, function () use (&$stopping) {
+                $stopping = true;
+            });
+            pcntl_signal(SIGINT, function () use (&$stopping) {
+                $stopping = true;
+            });
+        }
+
         // Self-healing loop: reconnects automatically if the WebSocket drops or
         // Deriv closes the session. Exits only when there are no active followers.
-        while (true) {
+        while (! $stopping) {
             if (! $this->hasActiveFollowers()) {
                 Log::info("MasterListenerJob: no active followers for connection #{$this->connectionId} — exiting.");
 
@@ -56,7 +68,7 @@ class MasterListenerJob implements ShouldQueue
             try {
                 $wsUrl = app(DerivApiService::class)->getOtpUrl($connection, $masterAccountId);
                 Log::info("MasterListenerJob: opening session for connection #{$this->connectionId}");
-                $this->runSession($wsUrl);
+                $this->runSession($wsUrl, $stopping);
             } catch (\Throwable $e) {
                 Log::warning("MasterListenerJob: session ended for connection #{$this->connectionId} — {$e->getMessage()}. Reconnecting in 5s...");
                 sleep(5);
@@ -66,7 +78,7 @@ class MasterListenerJob implements ShouldQueue
 
     // ─── WebSocket session ─────────────────────────────────────────────────────
 
-    private function runSession(string $wsUrl): void
+    private function runSession(string $wsUrl, bool &$stopping): void
     {
         $host = (string) parse_url($wsUrl, PHP_URL_HOST);
 
@@ -112,8 +124,8 @@ class MasterListenerJob implements ShouldQueue
                     $this->updateHeartbeat();
                     $lastHeartbeat = time();
 
-                    if (! $this->hasActiveFollowers()) {
-                        Log::info('MasterListenerJob: no active followers — shutting down cleanly.');
+                    if ($stopping || ! $this->hasActiveFollowers()) {
+                        Log::info('MasterListenerJob: shutting down cleanly.');
                         fclose($socket);
 
                         return;
