@@ -102,9 +102,11 @@ class DerivOAuthController extends Controller
     {
         $validated = $request->validate([
             'pat_token' => ['required', 'string', 'min:10'],
+            'redirect_to' => ['nullable', 'string', 'in:account,copy-trading'],
         ]);
 
         $token = $validated['pat_token'];
+        $redirectTo = $validated['redirect_to'] ?? 'account';
 
         try {
             $response = Http::withHeaders([
@@ -113,19 +115,19 @@ class DerivOAuthController extends Controller
                 'Accept' => 'application/json',
             ])->get('https://api.derivws.com/trading/v1/options/accounts');
         } catch (\Throwable) {
-            return redirect()->route('account')
+            return redirect()->route($redirectTo)
                 ->with('error', 'Could not reach Deriv. Please try again.');
         }
 
         if ($response->status() === 401) {
-            return redirect()->route('account')
+            return redirect()->route($redirectTo)
                 ->with('error', 'Invalid token. Please check your Personal Access Token and try again.');
         }
 
         if ($response->failed()) {
             $msg = $response->json('errors.0.message', 'Could not verify your token. Please try again.');
 
-            return redirect()->route('account')->with('error', $msg);
+            return redirect()->route($redirectTo)->with('error', $msg);
         }
 
         DerivConnection::updateOrCreate(
@@ -138,7 +140,7 @@ class DerivOAuthController extends Controller
             ]
         );
 
-        return redirect()->route('account')
+        return redirect()->route($redirectTo)
             ->with('success', 'Deriv account connected via Personal Access Token.');
     }
 

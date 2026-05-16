@@ -103,7 +103,8 @@
       "mcp__laravel-boost__database-query",
       "Bash(findstr /E \"\\(DerivService|DerivApiService|RiskManager|DerivLegacy\\)\")",
       "Bash(findstr /E \"\\(copy|deriv\\)\")",
-      "Skill(livewire-development)"
+      "Skill(livewire-development)",
+      "Bash(git show *)"
     ]
   },
   "enableAllProjectMcpServers": true,

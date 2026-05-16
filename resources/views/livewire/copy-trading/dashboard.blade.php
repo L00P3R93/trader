@@ -1,12 +1,18 @@
-<div class="space-y-6" wire:poll.15s x-data="{ runSeconds: 0, timer: null }"
+@php
+$setting = $this->setting;
+$initialSeconds = ($setting?->is_running && $setting?->session_started_at)
+    ? max(0, now()->diffInSeconds($setting->session_started_at))
+    : 0;
+@endphp
+<div class="space-y-6" wire:poll.15s x-data="{ runSeconds: {{ $initialSeconds }}, timer: null }"
     x-init="
+        if ($wire.setting?.is_running) { timer = setInterval(() => runSeconds++, 1000); }
         $watch('$wire.setting?.is_running', val => {
-            if (val) { timer = setInterval(() => runSeconds++, 1000); }
-            else { clearInterval(timer); runSeconds = 0; }
+            clearInterval(timer);
+            if (val) { runSeconds = 0; timer = setInterval(() => runSeconds++, 1000); }
+            else { runSeconds = 0; }
         });
     ">
-
-    @php $setting = $this->setting; @endphp
 
     {{-- ================================================================ --}}
     {{-- Stop Reason Popup (take profit / stop loss / max martingale)      --}}
@@ -91,57 +97,108 @@
     @endif
 
     {{-- ================================================================ --}}
-    {{-- Reset Confirmation Modal                                           --}}
+    {{-- Reset Modal                                                       --}}
     {{-- ================================================================ --}}
     @if($showResetModal)
     @php $isRunning = (bool) ($setting?->is_running); @endphp
-    <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-        <div class="w-full max-w-sm rounded-2xl border border-[#1F2937] bg-[#0B1220] shadow-2xl">
+    <div class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm px-4 py-8">
+        <div class="w-full max-w-lg rounded-2xl border border-[#1F2937] bg-[#0B1220] shadow-2xl" x-data="{ moreSettings: false }">
+
+            {{-- Header --}}
             <div class="flex items-center gap-3 border-b border-[#1F2937] px-6 py-5">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
                     <flux:icon.arrow-path class="size-5 text-amber-400" />
                 </div>
                 <div>
-                    <h3 class="font-bold text-white">Confirm Reset</h3>
-                    <p class="text-xs text-zinc-400">
-                        @if($isRunning) Bot is currently running @else Bot is stopped @endif
+                    <h3 class="font-bold text-white">Reset</h3>
+                    <p class="text-xs {{ $isRunning ? 'text-[#22C55E]' : 'text-zinc-400' }}">
+                        @if($isRunning)
+                            <span class="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#22C55E]"></span>Bot is currently running
+                        @else
+                            <span class="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-zinc-500"></span>Bot is stopped
+                        @endif
                     </p>
                 </div>
             </div>
 
-            <div class="px-6 py-5">
+            {{-- Options --}}
+            <div class="space-y-3 px-6 py-5">
+                {{-- Always: clear history --}}
+                <label class="flex cursor-default items-center gap-3 rounded-lg border border-[#1F2937] bg-[#111827] px-4 py-3 opacity-60">
+                    <input type="checkbox" checked disabled class="rounded border-zinc-600 bg-[#111827] text-[#1E45FC]" />
+                    <div>
+                        <p class="text-sm font-medium text-white">Clear trade history</p>
+                        <p class="text-xs text-zinc-500">All recorded trades for this session will be deleted</p>
+                    </div>
+                </label>
+
+                {{-- Reset balance --}}
+                <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-[#1F2937] bg-[#111827] px-4 py-3 hover:border-zinc-600 transition-colors">
+                    <input type="checkbox" wire:model="resetBalance" class="rounded border-zinc-600 bg-[#111827] text-[#1E45FC]" />
+                    <div>
+                        <p class="text-sm font-medium text-white">Reset balance snapshot</p>
+                        <p class="text-xs text-zinc-500">
+                            @if($isRunning) Updates start balance to your current balance @else Clears the start balance @endif
+                        </p>
+                    </div>
+                </label>
+
+                {{-- Stop bot (only if running) --}}
                 @if($isRunning)
-                    <p class="text-sm text-zinc-300 leading-relaxed">
-                        The bot will <strong class="text-white">continue running</strong>. This will:
-                    </p>
-                    <ul class="mt-3 space-y-1.5 text-sm text-zinc-400">
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"></span>Clear all trade history from this session</li>
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"></span>Reset the balance snapshot to current balance</li>
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"></span>Keep all your settings unchanged</li>
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"></span>Bot stays running without interruption</li>
-                    </ul>
-                @else
-                    <p class="text-sm text-zinc-300 leading-relaxed">
-                        Full reset — this will:
-                    </p>
-                    <ul class="mt-3 space-y-1.5 text-sm text-zinc-400">
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Delete all trade history</li>
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Clear the balance snapshot</li>
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Restore all trading parameters to defaults</li>
-                        <li class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-500"></span>Master/follower connection and pattern kept</li>
-                    </ul>
+                <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-[#1F2937] bg-[#111827] px-4 py-3 hover:border-zinc-600 transition-colors">
+                    <input type="checkbox" wire:model="stopBotOnReset" class="rounded border-zinc-600 bg-[#111827] text-red-500" />
+                    <div>
+                        <p class="text-sm font-medium text-white">Stop bot</p>
+                        <p class="text-xs text-zinc-500">Bot will be stopped before resetting. Uncheck to keep it running.</p>
+                    </div>
+                </label>
                 @endif
             </div>
 
+            {{-- More Settings --}}
+            <div class="border-t border-[#1F2937] px-6 pb-2 pt-3">
+                <button @click="moreSettings = !moreSettings"
+                    class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-[#111827] hover:text-white">
+                    <span x-text="moreSettings ? 'Hide Settings' : 'More Settings'"></span>
+                    <svg x-bind:class="moreSettings ? 'rotate-180' : ''" class="size-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <div x-show="moreSettings" x-collapse class="pb-4 pt-2">
+                    <p class="mb-3 text-xs text-zinc-500">Adjust settings here — they will be saved when you click Apply Reset.</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <flux:input wire:model="stake" label="Stake (USD)" type="number" step="0.01" min="0.35" />
+                        <flux:input wire:model="stakeMultiplier" label="Stake Multiplier ×" type="number" step="0.1" min="1" />
+                        <flux:input wire:model="takeProfit" label="Take Profit" type="number" min="0" placeholder="—" />
+                        <flux:input wire:model="stopLoss" label="Stop Loss" type="number" min="0" placeholder="—" />
+                        <flux:input wire:model="doMartingaleAt" label="Do Martingale at" type="number" min="1" />
+                        <flux:input wire:model="maxMartingale" label="Max Martingale" type="number" min="0" />
+                        <flux:input wire:model="maxCompound" label="Max Compound" type="number" min="0" />
+                        <flux:input wire:model="waitForLoss" label="Wait for Loss" type="number" min="0" />
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-4">
+                        <flux:checkbox wire:model="followMasterStake" label="Follow Master Stake" />
+                        <flux:checkbox wire:model="safeMode" label="Safe Mode" />
+                        <flux:checkbox wire:model="onlyUse1xWaitForLoss" label="Only 1× Wait for Loss" />
+                    </div>
+                </div>
+            </div>
+
+            {{-- Buttons --}}
             <div class="flex gap-3 border-t border-[#1F2937] px-6 py-4">
                 <flux:button wire:click="performReset" wire:loading.attr="disabled" wire:target="performReset"
-                    variant="{{ $isRunning ? 'primary' : 'danger' }}" class="flex-1">
-                    <span wire:loading.remove wire:target="performReset">
-                        {{ $isRunning ? 'Reset Session' : 'Full Reset' }}
-                    </span>
+                    variant="primary" class="flex-1">
+                    <span wire:loading.remove wire:target="performReset">Apply Reset</span>
                     <span wire:loading wire:target="performReset">Resetting…</span>
                 </flux:button>
-                <flux:button wire:click="$set('showResetModal', false)" variant="ghost" class="flex-1">Cancel</flux:button>
+                <flux:button wire:click="performFullReset" wire:loading.attr="disabled" wire:target="performFullReset"
+                    wire:confirm="This will clear all history, restore all settings to defaults, and stop the bot. Are you sure?"
+                    variant="danger">
+                    <span wire:loading.remove wire:target="performFullReset">Full Reset</span>
+                    <span wire:loading wire:target="performFullReset">…</span>
+                </flux:button>
+                <flux:button wire:click="$set('showResetModal', false)" variant="ghost">Cancel</flux:button>
             </div>
         </div>
     </div>
@@ -163,8 +220,8 @@
                     <div>
                         <flux:heading size="lg">Configure Copy Settings</flux:heading>
                         <flux:text class="mt-0.5 text-sm text-zinc-500">
-                            @if($selfCopyMode)
-                                Self-copy: trading your own accounts
+                            @if($ownAccountMode)
+                                Trading your own accounts
                             @else
                                 Following: <span class="font-medium text-white">{{ $master?->user->name }}</span>
                             @endif
@@ -174,8 +231,8 @@
 
                 <div class="space-y-5 px-6 py-5">
 
-                    {{-- Self-copy: master account selector --}}
-                    @if($selfCopyMode && count($this->myAccounts) > 0)
+                    {{-- Own-account mode: master account selector --}}
+                    @if($ownAccountMode && count($this->myAccounts) > 0)
                         <div>
                             <flux:label>Master Account <span class="text-amber-400">(trades to copy FROM)</span></flux:label>
                             <flux:text class="mb-3 text-xs text-zinc-500">Choose which of your accounts to copy trades from.</flux:text>
@@ -219,14 +276,14 @@
                     @if(count($this->myAccounts) > 0)
                         <div>
                             <flux:label>
-                                @if($selfCopyMode)
+                                @if($ownAccountMode)
                                     Follower Account <span class="text-[#1E45FC]">(trades to copy TO)</span>
                                 @else
                                     Your Trading Account
                                 @endif
                             </flux:label>
                             <flux:text class="mb-3 text-xs text-zinc-500">
-                                @if($selfCopyMode)
+                                @if($ownAccountMode)
                                     Choose which account will receive copied trades.
                                 @else
                                     Choose which account (real or demo) will copy trades.
@@ -317,7 +374,7 @@
             </div>
         @endif
 
-        {{-- ---- Available Masters + Self-copy option ---- --}}
+        {{-- ---- Available Masters + Own Account option ---- --}}
         <div>
             @if(! $showForm)
                 <div class="mb-4">
@@ -326,11 +383,11 @@
                 </div>
             @endif
 
-            {{-- Self-copy card --}}
+            {{-- Own account card --}}
             @php $ownConnection = auth()->user()->derivConnection; @endphp
             @if($ownConnection && !$showForm)
                 <div class="mb-6">
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Self-Copy (Your Accounts)</p>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Your Own Accounts</p>
                     <div class="rounded-xl border border-amber-800/40 bg-[#0B1220] p-5 hover:border-amber-500/40 transition-colors">
                         <div class="mb-3 flex items-start gap-3">
                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-900/40">
@@ -344,49 +401,28 @@
                         <div class="mb-4 rounded-lg bg-amber-900/10 px-4 py-3 text-xs text-amber-300/80">
                             You can set any of your accounts (demo or real) as the master, and copy trades into any other account.
                         </div>
-                        <flux:button wire:click="enterSelfCopyMode" variant="filled" size="sm" class="w-full bg-amber-600 hover:bg-amber-500 text-white">
-                            Configure Self-Copy
+                        <flux:button wire:click="enterOwnAccountMode" variant="filled" size="sm" class="w-full bg-amber-600 hover:bg-amber-500 text-white">
+                            Configure Account Trading
                         </flux:button>
                     </div>
                 </div>
             @endif
 
-            {{-- Platform masters --}}
+            {{-- Platform masters (coming soon) --}}
             @if(! $showForm)
-                <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Platform Masters</p>
-                @if($this->masters->isEmpty())
-                    <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-6 py-12 text-center">
-                        <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-800 p-4">
-                            <flux:icon.user-group class="size-6 text-zinc-400" />
-                        </div>
-                        <flux:heading size="sm">No platform masters yet</flux:heading>
-                        <flux:text class="mt-1 text-zinc-500">The admin hasn't designated any master traders yet.</flux:text>
+                <div class="flex items-center gap-3 mb-3">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Platform Masters</p>
+                    <span class="inline-flex items-center rounded-full border border-zinc-600/50 bg-zinc-800/60 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
+                        Coming Soon
+                    </span>
+                </div>
+                <div class="rounded-xl border border-dashed border-zinc-700/60 bg-zinc-900/40 px-6 py-10 text-center">
+                    <div class="mx-auto mb-3 w-fit rounded-full bg-zinc-800/80 p-4">
+                        <flux:icon.user-group class="size-6 text-zinc-500" />
                     </div>
-                @else
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach($this->masters as $master)
-                            <div wire:key="{{ $master->id }}"
-                                 class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-5 hover:border-[#1E45FC]/30 transition-colors">
-                                <div class="mb-3 flex items-start justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" />
-                                        <div>
-                                            <p class="font-semibold text-white">{{ $master->user->name }}</p>
-                                            <p class="text-xs text-zinc-500">{{ $master->user->email }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mb-4 text-sm text-zinc-500">
-                                    <span class="font-medium text-zinc-300">{{ $master->followers_count }}</span>
-                                    {{ Str::plural('follower', $master->followers_count) }}
-                                </p>
-                                <flux:button wire:click="selectMaster({{ $master->id }})" size="sm" variant="primary" class="w-full">
-                                    Follow This Master
-                                </flux:button>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
+                    <p class="text-sm font-medium text-zinc-400">Platform Masters — Coming Soon</p>
+                    <p class="mt-1 text-xs text-zinc-600">For now, use your own accounts to set up copy trading above.</p>
+                </div>
             @endif
         </div>
 
@@ -474,7 +510,11 @@
 
             {{-- Master outcomes + slave pattern --}}
             <div class="flex-1 min-w-0 rounded-xl border border-[#1F2937] bg-[#0B1220] px-4 py-3 space-y-2">
-                @livewire('copy-trading.master-outcomes-ticker', ['connectionId' => $setting->master_connection_id], key('ticker-'.$setting->master_connection_id))
+                @livewire('copy-trading.master-outcomes-ticker', [
+                    'connectionId'   => $setting->master_connection_id,
+                    'pattern'        => $setting->follower_pattern ?? '',
+                    'patternEnabled' => (bool) $setting->pattern_enabled,
+                ], key('ticker-'.$setting->master_connection_id))
 
                 {{-- Slave pattern display --}}
                 @if($setting->pattern_enabled && $setting->follower_pattern)
@@ -510,7 +550,7 @@
                             <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Master</p>
                             @if($setting->master_account_id)
                                 <p class="mt-1 font-semibold text-white">
-                                    Self-copy — <span class="font-mono text-amber-400">{{ $setting->master_account_id }}</span>
+                                    Own account — <span class="font-mono text-amber-400">{{ $setting->master_account_id }}</span>
                                 </p>
                                 <p class="text-xs text-zinc-500">Your own account is the master</p>
                             @else
@@ -526,12 +566,13 @@
                     @if($showMasterList)
                         <div class="mt-4 space-y-3">
 
-                            {{-- Self-copy option --}}
+                            {{-- Own account option --}}
                             @php $ownConn = auth()->user()->derivConnection; @endphp
                             @if($ownConn)
                                 <div class="rounded-lg border border-amber-800/40 bg-[#0B1220] p-3">
                                     <p class="mb-2 text-xs font-semibold text-amber-400">Use My Own Account</p>
 
+                                    {{-- Master account picker --}}
                                     @if(count($this->myAccounts) > 0)
                                         <p class="mb-1 text-xs text-zinc-500">Master account (copy FROM):</p>
                                         <div class="mb-2 space-y-1">
@@ -549,54 +590,36 @@
                                     @endif
 
                                     @if(! ($setting->master_account_id && $setting->master_connection_id === $ownConn->id))
-                                        <flux:button wire:click="switchToSelfCopy" wire:loading.attr="disabled" wire:target="switchToSelfCopy"
+                                        <flux:button wire:click="switchToOwnAccounts" wire:loading.attr="disabled" wire:target="switchToOwnAccounts"
                                             size="xs" class="w-full bg-amber-600 hover:bg-amber-500 text-white">
-                                            <span wire:loading.remove wire:target="switchToSelfCopy">Switch to Self-Copy</span>
-                                            <span wire:loading wire:target="switchToSelfCopy">…</span>
+                                            <span wire:loading.remove wire:target="switchToOwnAccounts">Switch to Own Account</span>
+                                            <span wire:loading wire:target="switchToOwnAccounts">…</span>
                                         </flux:button>
                                     @else
                                         <span class="inline-flex w-full items-center justify-center gap-1 rounded-full bg-amber-500/10 py-1 text-xs font-medium text-amber-400">
                                             <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
-                                            Current (self-copy)
+                                            Current (own account)
                                         </span>
                                     @endif
                                 </div>
                             @endif
 
-                            {{-- Platform masters --}}
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                @foreach($this->masters as $master)
-                                    @php $isCurrent = $setting->master_connection_id === $master->id && ! $setting->master_account_id; @endphp
-                                    <div wire:key="ml-{{ $master->id }}"
-                                        class="rounded-lg border p-3 transition-colors
-                                            {{ $isCurrent ? 'border-[#1E45FC]/40 bg-[#1E45FC]/5' : 'border-[#1F2937] bg-[#0B1220]' }}">
-                                        <div class="mb-2 flex items-center gap-2">
-                                            <flux:avatar :name="$master->user->name" :initials="$master->user->initials()" size="sm" />
-                                            <div class="min-w-0">
-                                                <p class="truncate text-sm font-semibold text-white">{{ $master->user->name }}</p>
-                                                <p class="text-xs text-zinc-500">{{ $master->followers_count }} {{ Str::plural('follower', $master->followers_count) }}</p>
-                                            </div>
-                                        </div>
-                                        @if(! $isCurrent)
-                                            <flux:button wire:click="switchMaster({{ $master->id }})" wire:loading.attr="disabled" wire:target="switchMaster({{ $master->id }})" size="xs" variant="primary" class="w-full">
-                                                <span wire:loading.remove wire:target="switchMaster({{ $master->id }})">Switch</span>
-                                                <span wire:loading wire:target="switchMaster({{ $master->id }})">…</span>
-                                            </flux:button>
-                                        @else
-                                            <span class="inline-flex w-full items-center justify-center gap-1 rounded-full bg-[#CDF12B]/10 py-1 text-xs font-medium text-[#CDF12B]">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-[#CDF12B]"></span>
-                                                Current
-                                            </span>
-                                        @endif
-                                    </div>
-                                @endforeach
+                            {{-- Platform masters (coming soon) --}}
+                            <div class="flex items-center gap-2 pt-1">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Platform Masters</p>
+                                <span class="inline-flex items-center rounded-full border border-zinc-600/50 bg-zinc-800/60 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                                    Coming Soon
+                                </span>
+                            </div>
+                            <div class="rounded-lg border border-dashed border-zinc-700/60 bg-zinc-900/40 px-4 py-4 text-center">
+                                <p class="text-xs text-zinc-500">Platform masters will be available soon. Use your own accounts above for now.</p>
                             </div>
                         </div>
                     @endif
                 </div>
 
-                {{-- Self-copy: master account in settings --}}
-                @if($selfCopyMode && count($this->myAccounts) > 0)
+                {{-- Own-account mode: master account in settings --}}
+                @if($ownAccountMode && count($this->myAccounts) > 0)
                 <div class="col-span-full">
                     <flux:label class="mb-2 block">Master Account <span class="text-amber-400">(copy FROM)</span></flux:label>
                     <flux:text class="mb-3 text-xs text-zinc-500">Which account's trades are being copied.</flux:text>
@@ -632,7 +655,7 @@
                 @if(count($this->myAccounts) > 0)
                 <div class="col-span-full">
                     <flux:label class="mb-2 block">
-                        @if($selfCopyMode)
+                        @if($ownAccountMode)
                             Follower Account <span class="text-[#1E45FC]">(copy TO)</span>
                         @else
                             Your Trading Account
@@ -825,36 +848,38 @@
         {{-- ===== STATUS CARDS ===== --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            {{-- Master account — connected badge only --}}
+            {{-- Master account --}}
+            @php $masterConn = $setting->masterConnection; @endphp
             <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-4 py-3">
                 <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Master Account</p>
-                @php $masterConn = $setting->masterConnection; @endphp
-                <div class="mt-2">
-                    <span @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
-                        'bg-[#22C55E]/10 text-[#22C55E]' => $masterConn && !$masterConn->isExpired(),
-                        'bg-red-500/10 text-red-400' => !$masterConn || $masterConn->isExpired(),
-                    ])>
-                        <span class="h-1.5 w-1.5 rounded-full {{ $masterConn && !$masterConn->isExpired() ? 'bg-[#22C55E]' : 'bg-red-400' }}"></span>
-                        {{ $masterConn && !$masterConn->isExpired() ? 'Connected' : 'Disconnected' }}
-                    </span>
-                </div>
+                <!--<p class="mt-1 text-sm font-semibold text-white">
+                    {{--@if($setting->master_account_id) Your own account
+                    @else {{ $setting->masterConnection?->user?->name ?? '—' }}
+                    @endif --}}
+                </p>-->
+                <span @class([
+                    'mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                    'bg-[#22C55E]/10 text-[#22C55E]' => $masterConn && !$masterConn->isExpired(),
+                    'bg-red-500/10 text-red-400' => !$masterConn || $masterConn->isExpired(),
+                ])>
+                    <span class="h-1.5 w-1.5 rounded-full {{ $masterConn && !$masterConn->isExpired() ? 'bg-[#22C55E]' : 'bg-red-400' }}"></span>
+                    {{ $masterConn && !$masterConn->isExpired() ? 'Connected' : 'Disconnected' }}
+                </span>
             </div>
 
-            {{-- Follower account — connected badge only --}}
+            {{-- Follower account --}}
             @php $myConnection = auth()->user()->derivConnection; @endphp
             <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] px-4 py-3">
                 <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Follower Account</p>
-                <div class="mt-2">
-                    <span @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
-                        'bg-[#22C55E]/10 text-[#22C55E]' => $myConnection && !$myConnection->isExpired(),
-                        'bg-red-500/10 text-red-400' => !$myConnection || $myConnection->isExpired(),
-                    ])>
-                        <span class="h-1.5 w-1.5 rounded-full {{ $myConnection && !$myConnection->isExpired() ? 'bg-[#22C55E]' : 'bg-red-400' }}"></span>
-                        {{ $myConnection && !$myConnection->isExpired() ? 'Connected' : 'Disconnected' }}
-                    </span>
-                </div>
+                <!--<p class="mt-1 text-sm font-semibold text-white">Your account</p>-->
+                <span @class([
+                    'mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                    'bg-[#22C55E]/10 text-[#22C55E]' => $myConnection && !$myConnection->isExpired(),
+                    'bg-red-500/10 text-red-400' => !$myConnection || $myConnection->isExpired(),
+                ])>
+                    <span class="h-1.5 w-1.5 rounded-full {{ $myConnection && !$myConnection->isExpired() ? 'bg-[#22C55E]' : 'bg-red-400' }}"></span>
+                    {{ $myConnection && !$myConnection->isExpired() ? 'Connected' : 'Disconnected' }}
+                </span>
             </div>
 
             {{-- Start balance --}}
@@ -1230,31 +1255,6 @@
                 </div>
             </div>
 
-            <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-4 text-xs text-zinc-400">
-                    @if($setting->pattern_enabled && $setting->follower_pattern)
-                        <div class="flex items-center gap-2">
-                            <span class="text-zinc-500">Slave Pattern:</span>
-                            <div class="flex items-center gap-1">
-                                @foreach(str_split($setting->follower_pattern) as $bit)
-                                    <span @class([
-                                        'inline-flex h-5 w-5 items-center justify-center rounded font-mono text-xs font-bold',
-                                        'bg-[#22C55E]/15 text-[#22C55E] border border-[#22C55E]/30' => $bit === '1',
-                                        'bg-red-500/15 text-red-400 border border-red-500/30' => $bit === '0',
-                                    ])>{{ $bit }}</span>
-                                @endforeach
-                                <!--<span class="ml-1 font-mono font-bold text-[#CDF12B]">{{ $setting->follower_pattern }}</span>-->
-                            </div>
-                            @if(! $setting->pattern_enabled)
-                                <span class="text-zinc-600">(disabled)</span>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-                <flux:button wire:click="exportTransactions" size="sm" variant="ghost" icon="arrow-down-tray">
-                    Export Transaction Data
-                </flux:button>
-            </div>
         </div>
 
     @endif {{-- end VIEW B --}}

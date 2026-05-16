@@ -149,8 +149,10 @@ class CopyTradeJob implements ShouldQueue
 
     private function markPatternConsumed(int $userId): void
     {
-        // TTL safety net: auto-expire after 10 min even if no sell event arrives
         Cache::put($this->patternConsumedKey($userId), true, now()->addMinutes(10));
+        // Record offset so the ticker resets and shows only outcomes after this trade
+        $len = Redis::llen("master_outcomes:{$this->masterConnectionId}");
+        Redis::setex("master_outcomes_offset:{$this->masterConnectionId}:{$userId}", 600, $len);
     }
 
     public static function clearAllPatternConsumed(int $masterConnectionId): void

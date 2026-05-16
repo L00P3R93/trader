@@ -11,6 +11,7 @@ use App\Models\DerivConnection;
 use App\Services\DerivApiService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -32,13 +33,17 @@ class Dashboard extends Component
 
     public bool $showResetModal = false;
 
-    /** Whether the user is configuring self-copy (their own account as master). */
-    public bool $selfCopyMode = false;
+    public bool $resetBalance = true;
+
+    public bool $stopBotOnReset = false;
+
+    /** Whether the user is using their own account as master (own-account trading mode). */
+    public bool $ownAccountMode = false;
 
     // -- Master selection --
     public ?int $selectedMasterId = null;
 
-    /** The specific Deriv account ID to listen on as master (used in self-copy mode). */
+    /** The specific Deriv account ID to listen on as master (used in own-account mode). */
     public ?string $masterAccountId = null;
 
     // -- Settings form properties --
@@ -116,7 +121,6 @@ class Dashboard extends Component
         }
 
         $this->selectedMasterId = $setting->master_connection_id;
-        $this->masterAccountId = $setting->master_account_id;
         $this->stake = (float) ($setting->stake ?? 1.00);
         $this->followMasterStake = $setting->follow_master_stake ?? false;
         $this->safeMode = $setting->safe_mode ?? false;
@@ -134,18 +138,19 @@ class Dashboard extends Component
         $this->filterMarkets = $setting->filter_markets ?? [];
         $this->syntheticIndices = $setting->synthetic_indices ?? [];
         $this->forexPairs = $setting->forex_pairs ?? [];
+        $this->masterAccountId = $setting->master_account_id;
         $this->followerAccountId = $setting->follower_account_id;
         $this->paused = ! ($setting->is_active ?? true);
 
         $ownConnection = auth()->user()->derivConnection;
         if ($ownConnection && $setting->master_connection_id === $ownConnection->id) {
-            $this->selfCopyMode = true;
+            $this->ownAccountMode = true;
         }
     }
 
     // ---- Pre-follow flow ----
 
-    public function enterSelfCopyMode(): void
+    public function enterOwnAccountMode(): void
     {
         $ownConnection = auth()->user()->derivConnection;
 
@@ -153,7 +158,7 @@ class Dashboard extends Component
             return;
         }
 
-        $this->selfCopyMode = true;
+        $this->ownAccountMode = true;
         $this->selectedMasterId = $ownConnection->id;
         $this->showForm = true;
         $this->showMasterList = false;
@@ -161,7 +166,7 @@ class Dashboard extends Component
 
     public function selectMaster(int $connectionId): void
     {
-        $this->selfCopyMode = false;
+        $this->ownAccountMode = false;
         $this->masterAccountId = null;
         $this->selectedMasterId = $connectionId;
         $this->showForm = true;
@@ -179,11 +184,11 @@ class Dashboard extends Component
 
         $this->selectedMasterId = $connectionId;
         $this->masterAccountId = null;
-        $this->selfCopyMode = false;
+        $this->ownAccountMode = false;
         $this->showMasterList = false;
     }
 
-    public function switchToSelfCopy(): void
+    public function switchToOwnAccounts(): void
     {
         $ownConnection = auth()->user()->derivConnection;
 
@@ -197,7 +202,7 @@ class Dashboard extends Component
         ]);
 
         $this->selectedMasterId = $ownConnection->id;
-        $this->selfCopyMode = true;
+        $this->ownAccountMode = true;
         $this->showMasterList = false;
     }
 
@@ -212,7 +217,7 @@ class Dashboard extends Component
         $this->followerAccountId = $setting?->follower_account_id;
         $this->showForm = false;
         $this->showMasterList = false;
-        $this->selfCopyMode = false;
+        $this->ownAccountMode = false;
     }
 
     public function follow(): void
@@ -229,7 +234,7 @@ class Dashboard extends Component
             $rules['followerAccountId'] = ['required', 'in:'.implode(',', $validAccountIds)];
         }
 
-        if ($this->selfCopyMode) {
+        if ($this->ownAccountMode) {
             $rules['masterAccountId'] = ['required', 'in:'.implode(',', $validAccountIds)];
         }
 
@@ -239,7 +244,7 @@ class Dashboard extends Component
             ['user_id' => auth()->id()],
             [
                 'master_connection_id' => $this->selectedMasterId,
-                'master_account_id' => $this->selfCopyMode ? $this->masterAccountId : null,
+                'master_account_id' => $this->ownAccountMode ? $this->masterAccountId : null,
                 'follower_pattern' => $this->followerPattern,
                 'pattern_enabled' => $this->patternEnabled,
                 'follower_account_id' => $this->followerAccountId ?: null,
@@ -258,12 +263,12 @@ class Dashboard extends Component
 
         $this->selectedMasterId = null;
         $this->masterAccountId = null;
+        $this->ownAccountMode = false;
         $this->followerPattern = '111';
         $this->patternEnabled = true;
         $this->followerAccountId = null;
         $this->showForm = false;
         $this->showMasterList = false;
-        $this->selfCopyMode = false;
         $this->paused = false;
 
         session()->flash('success', 'Copy trading disconnected.');
@@ -295,12 +300,12 @@ class Dashboard extends Component
             $this->validate(['followerAccountId' => ['nullable', 'in:'.implode(',', $validAccountIds)]]);
         }
 
-        if ($this->selfCopyMode && ! empty($validAccountIds) && $this->masterAccountId) {
+        if ($this->ownAccountMode && ! empty($validAccountIds) && $this->masterAccountId) {
             $this->validate(['masterAccountId' => ['nullable', 'in:'.implode(',', $validAccountIds)]]);
         }
 
         $setting->update([
-            'master_account_id' => $this->selfCopyMode ? ($this->masterAccountId ?: null) : null,
+            'master_account_id' => $this->ownAccountMode ? ($this->masterAccountId ?: null) : null,
             'stake' => $this->stake,
             'follow_master_stake' => $this->followMasterStake,
             'safe_mode' => $this->safeMode,
@@ -353,6 +358,7 @@ class Dashboard extends Component
 
         CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
         Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
+        Redis::del("master_outcomes_offset:{$setting->master_connection_id}:".auth()->id());
 
         if (! Cache::has(MasterListenerJob::heartbeatKey($setting->master_connection_id))) {
             MasterListenerJob::dispatch($setting->master_connection_id);
@@ -390,13 +396,11 @@ class Dashboard extends Component
 
     public function openResetModal(): void
     {
+        $this->resetBalance = true;
+        $this->stopBotOnReset = false;
         $this->showResetModal = true;
     }
 
-    /**
-     * Bot running → clear trades & refresh balance snapshot; keep all settings, bot continues.
-     * Bot stopped → clear trades & balance snapshot, restore all trading params to defaults.
-     */
     public function performReset(): void
     {
         $setting = auth()->user()->copySetting;
@@ -411,70 +415,125 @@ class Dashboard extends Component
 
         CopyTrade::query()->where('user_id', auth()->id())->delete();
 
-        if ($isRunning) {
-            $currentBalance = null;
-
-            try {
-                $connection = auth()->user()->derivConnection;
-
-                if ($connection) {
-                    $result = app(DerivApiService::class)->getBalance($connection);
-                    $currentBalance = (float) ($result['balance']['balance'] ?? 0);
-                }
-            } catch (\Throwable) {
-                // keep null
-            }
-
-            $setting->update([
-                'start_balance' => $currentBalance,
-                'session_started_at' => now(),
-                'stop_reason' => null,
-                'stopped_at_profit' => null,
-            ]);
-
-            CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
-            Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
-        } else {
-            $setting->update([
-                'start_balance' => null,
-                'session_started_at' => null,
-                'is_running' => false,
-                'stop_reason' => null,
-                'stopped_at_profit' => null,
-                'stake' => 1.00,
-                'follow_master_stake' => false,
-                'safe_mode' => false,
-                'stake_multiplier' => 1.00,
-                'take_profit' => null,
-                'stop_loss' => null,
-                'max_compound' => 0,
-                'do_martingale_at' => 1,
-                'max_martingale' => 0,
-                'if_hit_max_martingale' => 'stop',
-                'wait_for_loss' => 0,
-                'only_use_1x_wait_for_loss' => false,
-                'filter_markets' => [],
-                'synthetic_indices' => [],
-                'forex_pairs' => [],
-            ]);
-
-            $this->stake = 1.00;
-            $this->stakeMultiplier = 1.00;
-            $this->takeProfit = null;
-            $this->stopLoss = null;
-            $this->maxCompound = 0;
-            $this->doMartingaleAt = 1;
-            $this->maxMartingale = 0;
-            $this->ifHitMaxMartingale = 'stop';
-            $this->waitForLoss = 0;
-            $this->onlyUse1xWaitForLoss = false;
-            $this->followMasterStake = false;
-            $this->safeMode = false;
-            $this->filterMarkets = [];
-            $this->syntheticIndices = [];
-            $this->forexPairs = [];
+        if ($this->stopBotOnReset && $isRunning) {
+            $setting->update(['is_running' => false]);
+            Cache::forget(MasterListenerJob::heartbeatKey($setting->master_connection_id));
             $this->paused = false;
+            $isRunning = false;
         }
+
+        $updates = [
+            'stop_reason' => null,
+            'stopped_at_profit' => null,
+            'session_started_at' => now(),
+        ];
+
+        if ($this->resetBalance) {
+            if ($isRunning) {
+                try {
+                    $connection = auth()->user()->derivConnection;
+
+                    if ($connection) {
+                        $result = app(DerivApiService::class)->getBalance($connection);
+                        $updates['start_balance'] = (float) ($result['balance']['balance'] ?? 0);
+                    }
+                } catch (\Throwable) {
+                    $updates['start_balance'] = null;
+                }
+            } else {
+                $updates['start_balance'] = null;
+            }
+        }
+
+        // Save any settings the user may have edited in the "More Settings" section
+        $updates = array_merge($updates, [
+            'stake' => $this->stake,
+            'follow_master_stake' => $this->followMasterStake,
+            'safe_mode' => $this->safeMode,
+            'stake_multiplier' => $this->stakeMultiplier,
+            'take_profit' => $this->takeProfit,
+            'stop_loss' => $this->stopLoss,
+            'max_compound' => $this->maxCompound,
+            'do_martingale_at' => $this->doMartingaleAt,
+            'max_martingale' => $this->maxMartingale,
+            'if_hit_max_martingale' => $this->ifHitMaxMartingale,
+            'wait_for_loss' => $this->waitForLoss,
+            'only_use_1x_wait_for_loss' => $this->onlyUse1xWaitForLoss,
+            'filter_markets' => $this->filterMarkets,
+            'synthetic_indices' => $this->syntheticIndices,
+            'forex_pairs' => $this->forexPairs,
+        ]);
+
+        $setting->update($updates);
+
+        Redis::del("master_outcomes_offset:{$setting->master_connection_id}:".auth()->id());
+        CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
+        Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
+
+        $this->showResetModal = false;
+        $this->resetPage();
+    }
+
+    public function performFullReset(): void
+    {
+        $setting = auth()->user()->copySetting;
+
+        if (! $setting) {
+            $this->showResetModal = false;
+
+            return;
+        }
+
+        CopyTrade::query()->where('user_id', auth()->id())->delete();
+
+        if ($setting->is_running) {
+            $setting->update(['is_running' => false]);
+            Cache::forget(MasterListenerJob::heartbeatKey($setting->master_connection_id));
+        }
+
+        $setting->update([
+            'start_balance' => null,
+            'session_started_at' => null,
+            'is_running' => false,
+            'stop_reason' => null,
+            'stopped_at_profit' => null,
+            'stake' => 1.00,
+            'follow_master_stake' => false,
+            'safe_mode' => false,
+            'stake_multiplier' => 1.00,
+            'take_profit' => null,
+            'stop_loss' => null,
+            'max_compound' => 0,
+            'do_martingale_at' => 1,
+            'max_martingale' => 0,
+            'if_hit_max_martingale' => 'stop',
+            'wait_for_loss' => 0,
+            'only_use_1x_wait_for_loss' => false,
+            'filter_markets' => [],
+            'synthetic_indices' => [],
+            'forex_pairs' => [],
+        ]);
+
+        $this->stake = 1.00;
+        $this->stakeMultiplier = 1.00;
+        $this->takeProfit = null;
+        $this->stopLoss = null;
+        $this->maxCompound = 0;
+        $this->doMartingaleAt = 1;
+        $this->maxMartingale = 0;
+        $this->ifHitMaxMartingale = 'stop';
+        $this->waitForLoss = 0;
+        $this->onlyUse1xWaitForLoss = false;
+        $this->followMasterStake = false;
+        $this->safeMode = false;
+        $this->filterMarkets = [];
+        $this->syntheticIndices = [];
+        $this->forexPairs = [];
+        $this->paused = false;
+
+        Redis::del("master_outcomes_offset:{$setting->master_connection_id}:".auth()->id());
+        CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
+        Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
 
         $this->showResetModal = false;
         $this->resetPage();
@@ -671,7 +730,7 @@ class Dashboard extends Component
             $query->where('traded_at', '>=', $sessionStart);
         }
 
-        $trades = $query->orderByDesc('traded_at')->paginate($this->perPage);
+        $trades = $query->orderBy('traded_at')->paginate($this->perPage);
 
         return view('livewire.copy-trading.dashboard', compact('trades'));
     }
