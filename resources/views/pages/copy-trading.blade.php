@@ -16,7 +16,7 @@
         <div>
             <flux:heading size="xl">Copy Trading</flux:heading>
             <flux:text class="mt-1 text-zinc-500">
-                Follow a master trader and automatically copy their winning trades.
+                Copy trades from Demo to Real Account.
             </flux:text>
         </div>
 

@@ -15,17 +15,22 @@ use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Dashboard extends Component
 {
+    use WithPagination;
+
     // -- View state --
-    public string $activeTab = 'summary';
+    public string $activeTab = 'transactions';
 
     public bool $settingsOpen = false;
 
     public bool $showForm = false;
 
     public bool $showMasterList = false;
+
+    public bool $showResetModal = false;
 
     /** Whether the user is configuring self-copy (their own account as master). */
     public bool $selfCopyMode = false;
@@ -79,6 +84,23 @@ class Dashboard extends Component
     // -- Runtime state --
     public bool $paused = false;
 
+    // -- Transactions table --
+    public int $perPage = 25;
+
+    /** @var array<string, bool> */
+    public array $visibleColumns = [
+        'num' => true,
+        'result' => true,
+        'datetime' => true,
+        'symbol' => true,
+        'followerTrxId' => true,
+        'dur' => true,
+        'stake' => true,
+        'payout' => true,
+        'profit' => true,
+        'masterTrxId' => true,
+    ];
+
     public const AVAILABLE_MARKETS = ['R_10', 'R_25', 'R_50', 'R_75', 'R_100', '1HZ10V', '1HZ25V', '1HZ50V', '1HZ75V', '1HZ100V'];
 
     public const AVAILABLE_SYNTHETIC = ['DM', 'DD', 'OE', 'UO', 'TNT', 'OUD', 'RCP', 'RF', 'HILO', 'HLT'];
@@ -115,7 +137,6 @@ class Dashboard extends Component
         $this->followerAccountId = $setting->follower_account_id;
         $this->paused = ! ($setting->is_active ?? true);
 
-        // Detect if this is a self-copy setup (master connection belongs to current user)
         $ownConnection = auth()->user()->derivConnection;
         if ($ownConnection && $setting->master_connection_id === $ownConnection->id) {
             $this->selfCopyMode = true;
@@ -326,14 +347,13 @@ class Dashboard extends Component
             'is_running' => true,
             'is_active' => true,
             'session_started_at' => now(),
+            'stop_reason' => null,
+            'stopped_at_profit' => null,
         ]);
 
-        // Clear per-session locks so the new session starts fresh
         CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
         Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
 
-        // Dispatch the listener immediately; EnsureListenersRunning will restart
-        // it within 1 minute if the queue worker isn't available yet.
         if (! Cache::has(MasterListenerJob::heartbeatKey($setting->master_connection_id))) {
             MasterListenerJob::dispatch($setting->master_connection_id);
         }
@@ -351,9 +371,6 @@ class Dashboard extends Component
 
         $setting->update(['is_running' => false]);
 
-        // Clear heartbeat so EnsureListenersRunning does not restart the listener.
-        // The running job will notice is_running=false on its next 30-second ping
-        // cycle and exit cleanly on its own.
         Cache::forget(MasterListenerJob::heartbeatKey($setting->master_connection_id));
     }
 
@@ -369,18 +386,108 @@ class Dashboard extends Component
         $setting->update(['is_active' => ! $this->paused]);
     }
 
-    public function resetStats(): void
-    {
-        CopyTrade::query()
-            ->where('user_id', auth()->id())
-            ->delete();
+    // ---- Reset ----
 
+    public function openResetModal(): void
+    {
+        $this->showResetModal = true;
+    }
+
+    /**
+     * Bot running → clear trades & refresh balance snapshot; keep all settings, bot continues.
+     * Bot stopped → clear trades & balance snapshot, restore all trading params to defaults.
+     */
+    public function performReset(): void
+    {
+        $setting = auth()->user()->copySetting;
+
+        if (! $setting) {
+            $this->showResetModal = false;
+
+            return;
+        }
+
+        $isRunning = (bool) $setting->is_running;
+
+        CopyTrade::query()->where('user_id', auth()->id())->delete();
+
+        if ($isRunning) {
+            $currentBalance = null;
+
+            try {
+                $connection = auth()->user()->derivConnection;
+
+                if ($connection) {
+                    $result = app(DerivApiService::class)->getBalance($connection);
+                    $currentBalance = (float) ($result['balance']['balance'] ?? 0);
+                }
+            } catch (\Throwable) {
+                // keep null
+            }
+
+            $setting->update([
+                'start_balance' => $currentBalance,
+                'session_started_at' => now(),
+                'stop_reason' => null,
+                'stopped_at_profit' => null,
+            ]);
+
+            CopyTradeJob::clearAllPatternConsumed($setting->master_connection_id);
+            Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
+        } else {
+            $setting->update([
+                'start_balance' => null,
+                'session_started_at' => null,
+                'is_running' => false,
+                'stop_reason' => null,
+                'stopped_at_profit' => null,
+                'stake' => 1.00,
+                'follow_master_stake' => false,
+                'safe_mode' => false,
+                'stake_multiplier' => 1.00,
+                'take_profit' => null,
+                'stop_loss' => null,
+                'max_compound' => 0,
+                'do_martingale_at' => 1,
+                'max_martingale' => 0,
+                'if_hit_max_martingale' => 'stop',
+                'wait_for_loss' => 0,
+                'only_use_1x_wait_for_loss' => false,
+                'filter_markets' => [],
+                'synthetic_indices' => [],
+                'forex_pairs' => [],
+            ]);
+
+            $this->stake = 1.00;
+            $this->stakeMultiplier = 1.00;
+            $this->takeProfit = null;
+            $this->stopLoss = null;
+            $this->maxCompound = 0;
+            $this->doMartingaleAt = 1;
+            $this->maxMartingale = 0;
+            $this->ifHitMaxMartingale = 'stop';
+            $this->waitForLoss = 0;
+            $this->onlyUse1xWaitForLoss = false;
+            $this->followMasterStake = false;
+            $this->safeMode = false;
+            $this->filterMarkets = [];
+            $this->syntheticIndices = [];
+            $this->forexPairs = [];
+            $this->paused = false;
+        }
+
+        $this->showResetModal = false;
+        $this->resetPage();
+    }
+
+    public function dismissStopPopup(): void
+    {
         auth()->user()->copySetting?->update([
-            'start_balance' => null,
-            'is_running' => false,
+            'stop_reason' => null,
+            'stopped_at_profit' => null,
         ]);
 
-        $this->paused = false;
+        unset($this->stoppedReason);
     }
 
     public function exportTransactions(): void
@@ -388,7 +495,17 @@ class Dashboard extends Component
         $this->dispatch('export-transactions');
     }
 
-    // ---- Market toggles ----
+    // ---- Column & market toggles ----
+
+    public function toggleColumn(string $col): void
+    {
+        $this->visibleColumns[$col] = ! ($this->visibleColumns[$col] ?? true);
+    }
+
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
+    }
 
     public function toggleMarket(string $market): void
     {
@@ -431,6 +548,37 @@ class Dashboard extends Component
         return auth()->user()->load('copySetting.masterConnection.user')->copySetting;
     }
 
+    /** Info about why the bot was auto-stopped; empty array if nothing to show. */
+    #[Computed]
+    public function stoppedReason(): array
+    {
+        $setting = $this->setting;
+
+        if (! $setting || ! $setting->stop_reason) {
+            return [];
+        }
+
+        $query = CopyTrade::query()->where('user_id', auth()->id());
+
+        if ($setting->session_started_at) {
+            $query->where('traded_at', '>=', $setting->session_started_at);
+        }
+
+        $wins = (clone $query)->where('is_win', true)->count();
+        $losses = (clone $query)->where('is_win', false)->count();
+        $profit = (float) (clone $query)->sum('profit');
+
+        return [
+            'reason' => $setting->stop_reason,
+            'profit' => (float) ($setting->stopped_at_profit ?? $profit),
+            'wins' => $wins,
+            'losses' => $losses,
+            'total' => $wins + $losses,
+            'take_profit_target' => $setting->take_profit,
+            'stop_loss_target' => $setting->stop_loss,
+        ];
+    }
+
     #[Computed]
     public function masters(): Collection
     {
@@ -441,23 +589,6 @@ class Dashboard extends Component
             ->get();
     }
 
-    /** Latest 10 trades for the transactions table. */
-    #[Computed]
-    public function trades(): Collection
-    {
-        $query = CopyTrade::query()
-            ->where('user_id', auth()->id());
-
-        $sessionStart = $this->setting?->session_started_at;
-
-        if ($sessionStart) {
-            $query->where('traded_at', '>=', $sessionStart);
-        }
-
-        return $query->orderByDesc('traded_at')->limit(10)->get();
-    }
-
-    /** Aggregate stats for the full current session (no row limit). */
     #[Computed]
     public function stats(): array
     {
@@ -485,7 +616,6 @@ class Dashboard extends Component
         ];
     }
 
-    /** All accounts for the current user — used for both master and follower selectors. */
     #[Computed]
     public function myAccounts(): array
     {
@@ -520,7 +650,6 @@ class Dashboard extends Component
         }
     }
 
-    /** Whether the background listener is currently alive (has a fresh heartbeat). */
     #[Computed]
     public function listenerAlive(): bool
     {
@@ -535,6 +664,15 @@ class Dashboard extends Component
 
     public function render(): View
     {
-        return view('livewire.copy-trading.dashboard');
+        $query = CopyTrade::query()->where('user_id', auth()->id());
+
+        $sessionStart = $this->setting?->session_started_at;
+        if ($sessionStart) {
+            $query->where('traded_at', '>=', $sessionStart);
+        }
+
+        $trades = $query->orderByDesc('traded_at')->paginate($this->perPage);
+
+        return view('livewire.copy-trading.dashboard', compact('trades'));
     }
 }

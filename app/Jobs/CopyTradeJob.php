@@ -203,14 +203,22 @@ class CopyTradeJob implements ShouldQueue
 
         if ($setting->take_profit !== null && $totalProfit >= (float) $setting->take_profit) {
             Log::info("CopyTradeJob: take profit reached for user {$setting->user_id} (profit={$totalProfit})");
-            $setting->update(['is_running' => false]);
+            $setting->update([
+                'is_running' => false,
+                'stop_reason' => 'take_profit',
+                'stopped_at_profit' => $totalProfit,
+            ]);
 
             return true;
         }
 
         if ($setting->stop_loss !== null && $totalProfit <= -(float) $setting->stop_loss) {
             Log::info("CopyTradeJob: stop loss reached for user {$setting->user_id} (profit={$totalProfit})");
-            $setting->update(['is_running' => false]);
+            $setting->update([
+                'is_running' => false,
+                'stop_reason' => 'stop_loss',
+                'stopped_at_profit' => $totalProfit,
+            ]);
 
             return true;
         }
@@ -225,7 +233,11 @@ class CopyTradeJob implements ShouldQueue
 
             if ($consecutiveLosses >= (int) $setting->do_martingale_at + (int) $setting->max_martingale) {
                 Log::info("CopyTradeJob: max martingale stop triggered for user {$setting->user_id}");
-                $setting->update(['is_running' => false]);
+                $setting->update([
+                    'is_running' => false,
+                    'stop_reason' => 'max_martingale',
+                    'stopped_at_profit' => $totalProfit,
+                ]);
 
                 return true;
             }

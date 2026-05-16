@@ -38,6 +38,8 @@ class CopySetting extends Model
         'is_running',
         'start_balance',
         'session_started_at',
+        'stop_reason',
+        'stopped_at_profit',
     ];
 
     protected function casts(): array
@@ -54,6 +56,7 @@ class CopySetting extends Model
             'take_profit' => 'decimal:2',
             'stop_loss' => 'decimal:2',
             'start_balance' => 'decimal:2',
+            'stopped_at_profit' => 'decimal:2',
             'session_started_at' => 'datetime',
             'filter_markets' => 'array',
             'synthetic_indices' => 'array',

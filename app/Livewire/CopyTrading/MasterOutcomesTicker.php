@@ -11,11 +11,11 @@ class MasterOutcomesTicker extends Component
 {
     public int $connectionId;
 
-    /** Last 10 master trade outcomes in chronological order (1=win, 0=loss). */
+    /** All recorded master trade outcomes in chronological order (1=win, 0=loss). */
     #[Computed]
     public function outcomes(): array
     {
-        $raw = Redis::lrange("master_outcomes:{$this->connectionId}", 0, 9);
+        $raw = Redis::lrange("master_outcomes:{$this->connectionId}", 0, -1);
 
         return array_map('intval', array_reverse($raw));
     }
