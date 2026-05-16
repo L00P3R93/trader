@@ -1243,7 +1243,7 @@
                                         'bg-red-500/15 text-red-400 border border-red-500/30' => $bit === '0',
                                     ])>{{ $bit }}</span>
                                 @endforeach
-                                <span class="ml-1 font-mono font-bold text-[#CDF12B]">{{ $setting->follower_pattern }}</span>
+                                <!--<span class="ml-1 font-mono font-bold text-[#CDF12B]">{{ $setting->follower_pattern }}</span>-->
                             </div>
                             @if(! $setting->pattern_enabled)
                                 <span class="text-zinc-600">(disabled)</span>
