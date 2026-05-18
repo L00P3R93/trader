@@ -360,9 +360,7 @@ class Dashboard extends Component
         Cache::forget(CopyTradeJob::waitTriggerUsedKeyFor($setting->master_connection_id, auth()->id()));
         Redis::del("master_outcomes_offset:{$setting->master_connection_id}:".auth()->id());
 
-        if (! Cache::has(MasterListenerJob::heartbeatKey($setting->master_connection_id))) {
-            MasterListenerJob::dispatch($setting->master_connection_id);
-        }
+        MasterListenerJob::dispatch($setting->master_connection_id);
 
         $this->paused = false;
     }

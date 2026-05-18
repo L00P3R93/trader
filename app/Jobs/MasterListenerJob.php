@@ -27,7 +27,32 @@ class MasterListenerJob implements ShouldQueue
         $this->onQueue('listener');
     }
 
+    /** Cache key for deduplication — prevents multiple instances for the same connection. */
+    public static function runningKey(int $connectionId): string
+    {
+        return "deriv:listener:running:{$connectionId}";
+    }
+
     public function handle(): void
+    {
+        // Atomic mutex: exit immediately if another instance is already running for this connection.
+        // TTL 60 s; refreshed every ~30 s via updateHeartbeat() so it never expires while healthy.
+        // If the process is killed without reaching the finally block, the key naturally expires
+        // and the next startBot() dispatch or EnsureListenersRunning tick can proceed.
+        if (! Cache::add(self::runningKey($this->connectionId), true, 60)) {
+            Log::info("MasterListenerJob: duplicate instance for connection #{$this->connectionId} — exiting.");
+
+            return;
+        }
+
+        try {
+            $this->runListener();
+        } finally {
+            Cache::forget(self::runningKey($this->connectionId));
+        }
+    }
+
+    private function runListener(): void
     {
         $connection = DerivConnection::find($this->connectionId);
 
@@ -257,8 +282,8 @@ class MasterListenerJob implements ShouldQueue
 
     private function updateHeartbeat(): void
     {
-        // TTL 90 s. EnsureListenersRunning (every minute) restarts if this expires.
         Cache::put(self::heartbeatKey($this->connectionId), now()->toIso8601String(), 90);
+        Cache::put(self::runningKey($this->connectionId), true, 60);
     }
 
     private function resolveMasterAccountId(DerivConnection $connection): string

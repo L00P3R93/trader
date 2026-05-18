@@ -42,12 +42,14 @@
     x.parentNode.insertBefore(s, x);
 </script>
 
-{{-- Hide WATI's auto-generated button — we use our own styled FAB --}}
+{{-- Move WATI's send button off-screen — keeps it interactable for programmatic clicks --}}
 <style>
-    #whatsapp-chat-widget,
-    .wati-chat-button,
-    [id*="wati-widget"],
-    [class*="wati-widget"] { display: none !important; }
+    .wa-widget-send-button,
+    .wa-chat-bubble {
+        position: fixed !important;
+        left: -9999px !important;
+        opacity: 0 !important;
+    }
 </style>
 
 {{-- ── FAB container ────────────────────────────────────────────────────────── --}}
@@ -88,7 +90,7 @@
             rel="noopener noreferrer"
             aria-label="Chat on WhatsApp"
             onclick="
-                var waBtn = document.querySelector('[id*=wati] button, [class*=wati-chat] button');
+                var waBtn = document.querySelector('.wa-widget-send-button');
                 if (waBtn) { event.preventDefault(); waBtn.click(); }
             "
             class="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-[#25D366] shadow-lg shadow-[#25D366]/40 transition duration-200 group-hover:scale-110"

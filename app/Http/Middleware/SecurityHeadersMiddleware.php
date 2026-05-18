@@ -22,10 +22,10 @@ class SecurityHeadersMiddleware
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-            "style-src 'self' 'unsafe-inline'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://wati-integration-prod-service.clare.ai",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: https:",
-            "font-src 'self' https://fonts.bunny.net",
+            "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com",
             "connect-src 'self' wss: https:",
             "frame-ancestors 'none'",
             "object-src 'none'",

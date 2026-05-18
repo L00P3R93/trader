@@ -1,0 +1,316 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - link "Fully Automated Bots CT" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Fully Automated Bots CT" [ref=e6]
+      - generic [ref=e7]:
+        - link "About" [ref=e8] [cursor=pointer]:
+          - /url: "#about"
+        - link "Services" [ref=e9] [cursor=pointer]:
+          - /url: "#services"
+        - link "How It Works" [ref=e10] [cursor=pointer]:
+          - /url: "#how-it-works"
+        - link "FAQ" [ref=e11] [cursor=pointer]:
+          - /url: "#faq"
+      - generic [ref=e12]:
+        - link "Login" [ref=e13] [cursor=pointer]:
+          - /url: https://trader.test/login
+        - link "Start Free" [ref=e14] [cursor=pointer]:
+          - /url: https://trader.test/register
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]: Live on Deriv API
+      - heading "Copy the Best Trades. Demo to Real." [level=1] [ref=e21]:
+        - text: Copy the Best
+        - text: Trades.
+        - text: Demo to Real.
+      - paragraph [ref=e22]: Say goodbye to complex desktop installations and VPS setups. Our newly developed web-based system gives you full control of your copy trading from any device. Designed to adapt seamlessly to the latest Deriv API environments, it ensures your connection remains stable, secure, and uninterrupted 24/7.
+      - generic [ref=e23]:
+        - link "Start for Free" [ref=e24] [cursor=pointer]:
+          - /url: https://trader.test/register
+          - text: Start for Free
+          - img [ref=e25]
+        - link "See How It Works" [ref=e27] [cursor=pointer]:
+          - /url: "#how-it-works"
+          - text: See How It Works
+          - img [ref=e28]
+      - generic [ref=e30]:
+        - generic [ref=e31]: 🔒 Deriv API Secured
+        - generic [ref=e33]: ⚡ Real-Time Execution
+        - generic [ref=e35]: 📊 Live P&L Tracking
+        - generic [ref=e37]: 🖥️ No VPS or Desktop App
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: Total Balance
+            - paragraph [ref=e43]: $1,247.50
+          - generic [ref=e46]: Live
+        - generic [ref=e47]:
+          - generic [ref=e48]: +$47.20 today
+          - generic [ref=e49]: ·
+          - generic [ref=e50]: 3 accounts live
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: Live Trade Feed
+          - generic [ref=e56]: Real-time
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - generic [ref=e61]: CALL
+              - generic [ref=e62]: R_100
+            - generic [ref=e63]:
+              - generic [ref=e64]: $2.50
+              - generic [ref=e65]: ✓ Won
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - generic [ref=e68]: PUT
+              - generic [ref=e69]: EURUSD
+            - generic [ref=e70]:
+              - generic [ref=e71]: $1.00
+              - generic [ref=e72]: ✗ Lost
+          - generic [ref=e73]:
+            - generic [ref=e74]:
+              - generic [ref=e75]: CALL
+              - generic [ref=e76]: R_50
+            - generic [ref=e77]:
+              - generic [ref=e78]: $5.00
+              - generic [ref=e79]: ✓ Won
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - generic [ref=e82]: PUT
+              - generic [ref=e83]: R_100
+            - generic [ref=e84]:
+              - generic [ref=e85]: $2.00
+              - generic [ref=e86]: ✓ Won
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e89]: CALL
+              - generic [ref=e90]: GBPUSD
+            - generic [ref=e91]:
+              - generic [ref=e92]: $3.00
+              - generic [ref=e93]: ● Pending
+  - generic [ref=e96]:
+    - generic [ref=e97]:
+      - paragraph [ref=e98]: 100%
+      - paragraph [ref=e99]: Web-Based — No VPS Needed
+    - generic [ref=e100]:
+      - paragraph [ref=e101]: < 3s
+      - paragraph [ref=e102]: Avg Copy Speed
+    - generic [ref=e103]:
+      - paragraph [ref=e104]: 98%
+      - paragraph [ref=e105]: Platform Uptime
+    - generic [ref=e106]:
+      - paragraph [ref=e107]: 24/7
+      - paragraph [ref=e108]: Uninterrupted Connection
+  - generic [ref=e110]:
+    - generic [ref=e111]:
+      - paragraph [ref=e112]: About
+      - heading "What is Fully Automated Bots CT?" [level=2] [ref=e113]
+    - generic [ref=e114]:
+      - generic [ref=e115]:
+        - paragraph [ref=e116]: Fully Automated Bots CT is a web-based copy trading platform built directly on the Deriv API. Link your Deriv demo and real accounts, configure your settings, and the platform automatically copies trades from your demo account to your real account — no VPS, no desktop software, no complicated setup.
+        - paragraph [ref=e117]: Use your demo account as the source to test strategies risk-free, while your real account follows and executes the same trades live. Perfect for validating signals before committing real capital.
+        - paragraph [ref=e118]: Connect using Deriv OAuth with one click, or paste a Personal Access Token directly — whichever you prefer. Your token is stored encrypted at rest and is never readable in plain text.
+        - paragraph [ref=e119]: Your funds never leave your Deriv account. View live account summaries, real-time trade activity, and full P&L breakdowns from a single dashboard — your data fetched directly from Deriv, always up to date.
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - img [ref=e123]
+          - generic [ref=e125]: Self-copy trading — Demo account drives your Real account
+        - generic [ref=e126]:
+          - img [ref=e128]
+          - generic [ref=e130]: Connect via Deriv OAuth or Personal Access Token
+        - generic [ref=e131]:
+          - img [ref=e133]
+          - generic [ref=e135]: Encrypted token storage — AES-256, never readable in plain text
+        - generic [ref=e136]:
+          - img [ref=e138]
+          - generic [ref=e140]: Your funds stay in YOUR Deriv account at all times
+        - generic [ref=e141]:
+          - img [ref=e143]
+          - generic [ref=e145]: Slave pattern filter — define the win/loss sequence before copying activates
+        - generic [ref=e146]:
+          - img [ref=e148]
+          - generic [ref=e150]: "Live account summaries: balance, P&L, and real-time trade feed"
+        - generic [ref=e151]:
+          - img [ref=e153]
+          - generic [ref=e155]: Take profit and stop loss — bot pauses automatically when limits are hit
+        - generic [ref=e156]:
+          - img [ref=e158]
+          - generic [ref=e160]: Pause or stop copying at any time, instantly from your dashboard
+  - generic [ref=e162]:
+    - generic [ref=e163]:
+      - paragraph [ref=e164]: Services
+      - heading "Everything You Need to Copy Smarter" [level=2] [ref=e165]
+    - generic [ref=e166]:
+      - generic [ref=e167]:
+        - img [ref=e169]
+        - heading "Demo-to-Real Copy Trading" [level=3] [ref=e171]
+        - paragraph [ref=e172]: Your Deriv demo account acts as the source — every trade it places is mirrored to your real account in real time via the official Deriv WebSocket API. Test strategies risk-free, then run them live automatically.
+      - generic [ref=e173]:
+        - img [ref=e175]
+        - heading "Slave Pattern Filter" [level=3] [ref=e177]
+        - paragraph [ref=e178]: Define a custom win/loss sequence — e.g. "111" for three consecutive wins — that must match before copying activates on your real account. Keeps you out of cold streaks automatically.
+      - generic [ref=e179]:
+        - img [ref=e181]
+        - heading "Live P&L Dashboard" [level=3] [ref=e183]
+        - paragraph [ref=e184]: Track every trade with real-time win rate, total P&L, best and worst trade, and average stake — pulled live from your Deriv account statement the moment each trade settles.
+      - generic [ref=e185]:
+        - img [ref=e187]
+        - heading "Demo & Real Account Management" [level=3] [ref=e189]
+        - paragraph [ref=e190]: View both your demo and real Deriv accounts side-by-side with live balances and a real-time transaction feed. Switch accounts, reset demo balance, and monitor all activity from one place.
+      - generic [ref=e191]:
+        - img [ref=e193]
+        - heading "Flexible Connection — OAuth & PAT" [level=3] [ref=e195]
+        - paragraph [ref=e196]: Authorize with one click via Deriv OAuth, or connect directly using a Personal Access Token. Your credentials are stored with AES-256 encryption and never exposed in plain text.
+      - generic [ref=e197]:
+        - img [ref=e199]
+        - heading "Stake, Take Profit & Stop Loss" [level=3] [ref=e201]
+        - paragraph [ref=e202]: Set a fixed stake amount, configure take profit and stop loss limits per session, and let the bot pause automatically when thresholds are hit. All settings can be updated at any time.
+      - generic [ref=e203]:
+        - generic [ref=e204]: Coming Soon
+        - img [ref=e206]
+        - heading "Copy From Platform Masters" [level=3] [ref=e208]
+        - paragraph [ref=e209]: Follow verified master traders on the platform and let our system mirror their trades to your account automatically — with full control over stake, risk, and pattern settings.
+  - generic [ref=e211]:
+    - generic [ref=e212]:
+      - paragraph [ref=e213]: Process
+      - heading "Up and Running in Minutes" [level=2] [ref=e214]
+    - paragraph [ref=e215]: No complicated setup. No coding. Just connect and copy.
+    - generic [ref=e216]:
+      - generic [ref=e217]:
+        - generic [ref=e218]: "01"
+        - generic [ref=e219]:
+          - heading "Create Your Account" [level=3] [ref=e220]
+          - paragraph [ref=e221]:
+            - text: Sign up free and verify your email — under 60 seconds, no credit card required. No Deriv account yet?
+            - link "Create one free here" [ref=e222] [cursor=pointer]:
+              - /url: https://track.deriv.com/_Ed6zZUkRQYaX6ytsi48cKWNd7ZgqdRLk/1/
+            - text: .
+      - generic [ref=e223]:
+        - generic [ref=e224]: "02"
+        - generic [ref=e225]:
+          - heading "Connect Your Deriv Account" [level=3] [ref=e226]
+          - paragraph [ref=e227]: Use one-click Deriv OAuth or paste a Personal Access Token. Credentials are encrypted at rest — never stored in plain text.
+      - generic [ref=e228]:
+        - generic [ref=e229]: "03"
+        - generic [ref=e230]:
+          - heading "Configure Accounts & Settings" [level=3] [ref=e231]
+          - paragraph [ref=e232]: Master Account = Demo · Follower Account = Real. Set your Slave Pattern, Stake, Take Profit, and Stop Loss — all adjustable at any time.
+          - generic [ref=e233]:
+            - generic [ref=e236]: "Testing: select Master Account twice (Demo)"
+            - generic [ref=e239]: "Live trading: select Master + Follower Account"
+      - generic [ref=e240]:
+        - generic [ref=e241]: "04"
+        - generic [ref=e242]:
+          - heading "Trades Copy Automatically" [level=3] [ref=e243]
+          - paragraph [ref=e244]: Trades copy in real time following your Slave Pattern. Your balance and P&L update instantly on the dashboard.
+    - generic [ref=e246]:
+      - heading "Ready to start?" [level=3] [ref=e247]
+      - paragraph [ref=e248]: Start copying your demo trades to your real account today. Free to get started — no credit card required.
+      - link "Create Free Account" [ref=e249] [cursor=pointer]:
+        - /url: https://trader.test/register
+        - text: Create Free Account
+        - img [ref=e250]
+  - generic [ref=e253]:
+    - generic [ref=e254]:
+      - paragraph [ref=e255]: FAQ
+      - heading "Frequently Asked Questions" [level=2] [ref=e256]
+    - generic [ref=e257]:
+      - button "Is my Deriv account safe?" [ref=e259]:
+        - generic [ref=e260]: Is my Deriv account safe?
+        - img [ref=e261]
+      - button "What is the difference between the Master Account and Follower Account?" [ref=e264]:
+        - generic [ref=e265]: What is the difference between the Master Account and Follower Account?
+        - img [ref=e266]
+      - button "What is the Slave Pattern and how do I set it?" [ref=e269]:
+        - generic [ref=e270]: What is the Slave Pattern and how do I set it?
+        - img [ref=e271]
+      - button "How does the real-time copying work?" [ref=e274]:
+        - generic [ref=e275]: How does the real-time copying work?
+        - img [ref=e276]
+      - button "How fast are trades copied?" [ref=e279]:
+        - generic [ref=e280]: How fast are trades copied?
+        - img [ref=e281]
+      - button "How much does it cost?" [ref=e284]:
+        - generic [ref=e285]: How much does it cost?
+        - img [ref=e286]
+      - button "Can I set limits to protect my capital?" [ref=e289]:
+        - generic [ref=e290]: Can I set limits to protect my capital?
+        - img [ref=e291]
+      - button "Can I pause or stop copying at any time?" [ref=e294]:
+        - generic [ref=e295]: Can I pause or stop copying at any time?
+        - img [ref=e296]
+      - button "Can I follow master traders from other users on the platform?" [ref=e299]:
+        - generic [ref=e300]: Can I follow master traders from other users on the platform?
+        - img [ref=e301]
+      - button "What is Deriv?" [ref=e304]:
+        - generic [ref=e305]: What is Deriv?
+        - img [ref=e306]
+  - contentinfo [ref=e308]:
+    - generic [ref=e309]:
+      - generic [ref=e310]:
+        - generic [ref=e311]:
+          - img "Fully Automated Bots CT" [ref=e313]
+          - paragraph [ref=e314]: The web-based copy trading platform for Deriv traders. Demo to Real — automated, secure, 24/7.
+          - generic [ref=e315]:
+            - img [ref=e316]
+            - text: Built on Deriv API
+        - generic [ref=e318]:
+          - heading "Quick Links" [level=4] [ref=e319]
+          - generic [ref=e320]:
+            - link "Home" [ref=e321] [cursor=pointer]:
+              - /url: /
+            - link "About" [ref=e322] [cursor=pointer]:
+              - /url: "#about"
+            - link "Services" [ref=e323] [cursor=pointer]:
+              - /url: "#services"
+            - link "How It Works" [ref=e324] [cursor=pointer]:
+              - /url: "#how-it-works"
+            - link "FAQ" [ref=e325] [cursor=pointer]:
+              - /url: "#faq"
+            - link "Login" [ref=e326] [cursor=pointer]:
+              - /url: https://trader.test/login
+            - link "Register" [ref=e327] [cursor=pointer]:
+              - /url: https://trader.test/register
+        - generic [ref=e328]:
+          - heading "Risk Warning" [level=4] [ref=e329]
+          - paragraph [ref=e330]: Trading in financial instruments involves substantial risk of loss and is not suitable for all investors. Past performance of master traders is not indicative of future results.
+          - paragraph [ref=e331]: Fully Automated Bots CT is a technology service only and does not provide investment advice. You are solely responsible for all trading decisions made through our platform.
+          - paragraph [ref=e332]: This service is not affiliated with, endorsed by, or in any way officially connected with Deriv.com or its parent companies.
+      - generic [ref=e333]:
+        - paragraph [ref=e334]: © 2026 Fully Automated Bots CT. All rights reserved.
+        - paragraph [ref=e335]: Not affiliated with Deriv.com
+  - generic [ref=e336]:
+    - generic [ref=e337]:
+      - generic: Chat on Telegram
+      - link "Chat on Telegram" [ref=e338] [cursor=pointer]:
+        - /url: https://t.me/fullyautomatedbot
+        - img [ref=e339]
+    - generic [ref=e341]:
+      - generic: Chat on WhatsApp
+      - link "Chat on WhatsApp" [ref=e342] [cursor=pointer]:
+        - /url: https://wa.me/254739234464
+        - img [ref=e343]
+  - generic:
+    - generic [ref=e345] [cursor=pointer]:
+      - img
+    - generic [ref=e346]:
+      - generic [ref=e347] [cursor=pointer]:
+        - img
+      - generic [ref=e348] [cursor=pointer]: Chat with us
+    - generic:
+      - img "undefined/"
+      - generic:
+        - text: Hi there!
+        - text: How can I help you?
+      - button "Chat with us":
+        - img
+        - generic: Chat with us
+        - img
+      - generic:
+        - img
+        - text: Powered by
+        - link "wati.io":
+          - /url: https://www.wati.io/?utm_source=shopify&utm_medium=chat_widget&utm_campaign=shopify_widget
