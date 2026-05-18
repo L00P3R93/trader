@@ -27,7 +27,7 @@
             "brandSubTitle": "undefined",
             "brandImg": "https://www.wati.io/wp-content/uploads/2023/04/Wati-logo.svg",
             "welcomeText": "Hi there!\nHow can I help you?",
-            "messageText": "Hello, %0A I have a question about {{page_link}}",
+            "messageText": "Hello, %0A I have a question about @{{page_link}}",
             "backgroundColor": "#00e785",
             "ctaText": "Chat with us",
             "borderRadius": "25",
