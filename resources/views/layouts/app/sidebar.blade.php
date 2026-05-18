@@ -4,10 +4,10 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-[#020617]">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-[#1F2937] bg-[#0B1220]">
+        <flux:sidebar sticky :collapsible="true" class="border-e border-[#1F2937] bg-[#0B1220]">
             <flux:sidebar.header class="border-b border-[#1F2937]">
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
+                <flux:sidebar.collapse />
             </flux:sidebar.header>
 
             <flux:sidebar.nav class="gap-0.5 p-2">
@@ -111,14 +111,14 @@
 
             <flux:dropdown position="top" align="end">
                 <flux:profile
-                    :initials="auth()->user()->initials()"
+                    :avatar="auth()->user()->gravatar()"
                     icon-trailing="chevron-down"
                 />
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="flex items-center gap-2 px-1 py-1.5 text-sm">
-                            <flux:avatar :name="auth()->user()->name" :initials="auth()->user()->initials()" />
+                            <flux:avatar :src="auth()->user()->gravatar()" :name="auth()->user()->name" />
                             <div class="grid flex-1 leading-tight">
                                 <div class="flex items-center gap-1.5">
                                     <flux:heading class="truncate text-sm">{{ auth()->user()->name }}</flux:heading>
@@ -153,6 +153,11 @@
 
         <livewire:onboarding.tutorial />
 
+        <script>
+            if (localStorage.getItem('flux-sidebar-collapsed-desktop') === null) {
+                localStorage.setItem('flux-sidebar-collapsed-desktop', 'true');
+            }
+        </script>
         @fluxScripts
     </body>
 </html>

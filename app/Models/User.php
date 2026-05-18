@@ -23,6 +23,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'google_id',
+        'avatar',
         'is_admin',
         'status',
         'onboarding_completed_at',
@@ -82,5 +84,12 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function gravatar(int $size = 80): string
+    {
+        $hash = md5(strtolower(trim($this->email)));
+
+        return "https://www.gravatar.com/avatar/{$hash}?s={$size}&d=mp";
     }
 }

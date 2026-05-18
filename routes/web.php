@@ -1,9 +1,13 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\DerivOAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', fn () => view('pages.dashboard'))->name('dashboard');

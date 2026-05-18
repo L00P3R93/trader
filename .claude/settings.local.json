@@ -104,7 +104,8 @@
       "Bash(findstr /E \"\\(DerivService|DerivApiService|RiskManager|DerivLegacy\\)\")",
       "Bash(findstr /E \"\\(copy|deriv\\)\")",
       "Skill(livewire-development)",
-      "Bash(git show *)"
+      "Bash(git show *)",
+      "Bash(powershell *)"
     ]
   },
   "enableAllProjectMcpServers": true,
