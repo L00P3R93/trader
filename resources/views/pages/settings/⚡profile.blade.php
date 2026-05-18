@@ -119,6 +119,8 @@ new #[Title('Profile settings')] class extends Component {
             </div>
         </form>
 
+        <livewire:pages::settings.link-google-account />
+
         @if ($this->showDeleteUser)
             <livewire:pages::settings.delete-user-form />
         @endif

@@ -111,14 +111,14 @@
 
             <flux:dropdown class="lg:hidden" position="top" align="end">
                 <flux:profile
-                    :avatar="auth()->user()->gravatar()"
+                    :avatar="auth()->user()->profileAvatar()"
                     icon-trailing="chevron-down"
                 />
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="flex items-center gap-2 px-1 py-1.5 text-sm">
-                            <flux:avatar :src="auth()->user()->gravatar()" :name="auth()->user()->name" />
+                            <flux:avatar :src="auth()->user()->profileAvatar()" :name="auth()->user()->name" />
                             <div class="grid flex-1 leading-tight">
                                 <div class="flex items-center gap-1.5">
                                     <flux:heading class="truncate text-sm">{{ auth()->user()->name }}</flux:heading>

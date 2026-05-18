@@ -86,6 +86,11 @@ class User extends Authenticatable
             ->implode('');
     }
 
+    public function profileAvatar(): string
+    {
+        return $this->avatar ?? $this->gravatar();
+    }
+
     public function gravatar(int $size = 80): string
     {
         $hash = md5(strtolower(trim($this->email)));

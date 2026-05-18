@@ -1,7 +1,7 @@
 <flux:dropdown position="bottom" align="start">
     <flux:sidebar.profile
         :name="auth()->user()->name"
-        :avatar="auth()->user()->gravatar()"
+        :avatar="auth()->user()->profileAvatar()"
         icon:trailing="chevrons-up-down"
         data-test="sidebar-menu-button"
     />
@@ -9,7 +9,7 @@
     <flux:menu>
         <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
             <flux:avatar
-                :src="auth()->user()->gravatar()"
+                :src="auth()->user()->profileAvatar()"
                 :name="auth()->user()->name"
             />
             <div class="grid flex-1 text-start text-sm leading-tight">
