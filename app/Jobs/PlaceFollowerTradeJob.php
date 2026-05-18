@@ -70,8 +70,8 @@ class PlaceFollowerTradeJob implements ShouldQueue
 
             if ($this->markPatternConsumed) {
                 Cache::put(CopyTradeJob::patternConsumedKey($this->masterConnectionId, $this->userId), true, now()->addMinutes(10));
-                $len = Redis::llen("master_outcomes:{$this->masterConnectionId}");
-                Redis::setex("master_outcomes_offset:{$this->masterConnectionId}:{$this->userId}", 600, $len);
+                $count = (int) (Redis::get("master_outcomes_count:{$this->masterConnectionId}") ?? 0);
+                Redis::setex("master_outcomes_offset:{$this->masterConnectionId}:{$this->userId}", 600, $count);
             }
 
             if ($this->markWaitTrigger) {

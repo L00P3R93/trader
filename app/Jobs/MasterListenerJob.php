@@ -199,6 +199,7 @@ class MasterListenerJob implements ShouldQueue
                 $key = "master_outcomes:{$this->connectionId}";
                 Redis::lpush($key, $isWin);
                 Redis::ltrim($key, 0, 49);
+                Redis::incr("master_outcomes_count:{$this->connectionId}");
 
                 // Reset per-user pattern-consumed locks so the next buy can trigger a fresh trade
                 CopyTradeJob::clearAllPatternConsumed($this->connectionId);

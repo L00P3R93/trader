@@ -41,7 +41,6 @@ class CopyTradeJob implements ShouldQueue
             ->get();
 
         $recentOutcomes = $this->getRecentOutcomes($this->masterConnectionId);
-        $totalOutcomeLen = Redis::llen("master_outcomes:{$this->masterConnectionId}");
 
         foreach ($followers as $setting) {
             $followerConnection = $setting->user?->derivConnection;
@@ -61,7 +60,7 @@ class CopyTradeJob implements ShouldQueue
 
             // Only match against outcomes that arrived after the last trade for this follower,
             // so that consumed outcomes from a previous cycle cannot contribute to the next one.
-            $outcomesForPattern = $this->getFreshOutcomes($recentOutcomes, $totalOutcomeLen, $setting);
+            $outcomesForPattern = $this->getFreshOutcomes($recentOutcomes, $setting);
 
             if (! $setting->matchesPattern($outcomesForPattern)) {
                 Log::debug("CopyTradeJob: pattern not matched for user {$setting->user_id}.", [
@@ -338,20 +337,28 @@ class CopyTradeJob implements ShouldQueue
      * Return only the outcomes that arrived after the follower's last trade.
      * When pattern matching is off, returns the full window unchanged.
      */
-    private function getFreshOutcomes(array $recentOutcomes, int $totalLen, CopySetting $setting): array
+    private function getFreshOutcomes(array $recentOutcomes, CopySetting $setting): array
     {
         if (! $setting->pattern_enabled || empty($setting->follower_pattern)) {
             return $recentOutcomes;
         }
 
-        $offset = (int) (Redis::get("master_outcomes_offset:{$this->masterConnectionId}:{$setting->user_id}") ?? 0);
-        $newCount = max(0, $totalLen - $offset);
+        $totalCount = Redis::get("master_outcomes_count:{$this->masterConnectionId}");
+
+        // No count key yet (pre-deploy or first run) — treat all outcomes as fresh
+        if ($totalCount === null) {
+            return $recentOutcomes;
+        }
+
+        $totalCount = (int) $totalCount;
+        $offsetCount = (int) (Redis::get("master_outcomes_offset:{$this->masterConnectionId}:{$setting->user_id}") ?? 0);
+        $newCount = max(0, $totalCount - $offsetCount);
 
         if ($newCount === 0) {
             return [];
         }
 
-        return array_slice($recentOutcomes, -$newCount);
+        return array_slice($recentOutcomes, -min($newCount, count($recentOutcomes)));
     }
 
     private function getRecentOutcomes(int $masterConnectionId): array

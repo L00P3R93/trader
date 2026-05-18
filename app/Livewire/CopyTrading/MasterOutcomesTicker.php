@@ -19,12 +19,24 @@ class MasterOutcomesTicker extends Component
     #[Computed]
     public function outcomes(): array
     {
-        $raw = Redis::lrange("master_outcomes:{$this->connectionId}", 0, -1);
-        $all = array_map('intval', array_reverse($raw)); // oldest → newest
+        $totalCount = (int) (Redis::get("master_outcomes_count:{$this->connectionId}") ?? 0);
+        $offsetCount = (int) Redis::get("master_outcomes_offset:{$this->connectionId}:".auth()->id());
+        $newCount = max(0, $totalCount - $offsetCount);
 
-        $offset = (int) Redis::get("master_outcomes_offset:{$this->connectionId}:".auth()->id());
+        if ($totalCount === 0) {
+            // No count key yet (pre-deploy data) — show everything available
+            $raw = Redis::lrange("master_outcomes:{$this->connectionId}", 0, -1);
 
-        return array_values(array_slice($all, $offset));
+            return array_values(array_reverse(array_map('intval', $raw)));
+        }
+
+        if ($newCount === 0) {
+            return [];
+        }
+
+        $raw = Redis::lrange("master_outcomes:{$this->connectionId}", 0, min($newCount, 50) - 1);
+
+        return array_values(array_reverse(array_map('intval', $raw)));
     }
 
     /** Whether the current tail of outcomes matches the configured pattern. */
