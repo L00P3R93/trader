@@ -21,6 +21,13 @@
 
         {{-- Live server data: hidden the moment a trade fires, until the server resets. --}}
         <div x-show="!cleared" class="flex flex-wrap items-center gap-1.5">
+            {{-- Unstick 'cleared' if new outcomes arrive that no longer match the pattern.
+                 x-init fires only when this element enters the DOM, which happens exactly
+                 when the badge disappears (matched→false) while outcomes are still present. --}}
+            @if(! $matched && $total > 0)
+                <span x-init="$dispatch('outcomes-reset')" style="display:none"></span>
+            @endif
+
             @forelse($outcomes as $idx => $outcome)
                 @php
                     $inWindow = $patLen > 0 && $idx >= $windowStart;
