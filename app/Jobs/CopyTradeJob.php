@@ -41,6 +41,7 @@ class CopyTradeJob implements ShouldQueue
             ->get();
 
         $recentOutcomes = $this->getRecentOutcomes($this->masterConnectionId);
+        $totalOutcomeLen = Redis::llen("master_outcomes:{$this->masterConnectionId}");
 
         foreach ($followers as $setting) {
             $followerConnection = $setting->user?->derivConnection;
@@ -58,9 +59,13 @@ class CopyTradeJob implements ShouldQueue
                 }
             }
 
-            if (! $setting->matchesPattern($recentOutcomes)) {
+            // Only match against outcomes that arrived after the last trade for this follower,
+            // so that consumed outcomes from a previous cycle cannot contribute to the next one.
+            $outcomesForPattern = $this->getFreshOutcomes($recentOutcomes, $totalOutcomeLen, $setting);
+
+            if (! $setting->matchesPattern($outcomesForPattern)) {
                 Log::debug("CopyTradeJob: pattern not matched for user {$setting->user_id}.", [
-                    'master_outcomes' => $recentOutcomes,
+                    'master_outcomes' => $outcomesForPattern,
                     'pattern' => $setting->follower_pattern,
                 ]);
 
@@ -328,6 +333,26 @@ class CopyTradeJob implements ShouldQueue
     }
 
     // ─── Redis outcomes ────────────────────────────────────────────────────────
+
+    /**
+     * Return only the outcomes that arrived after the follower's last trade.
+     * When pattern matching is off, returns the full window unchanged.
+     */
+    private function getFreshOutcomes(array $recentOutcomes, int $totalLen, CopySetting $setting): array
+    {
+        if (! $setting->pattern_enabled || empty($setting->follower_pattern)) {
+            return $recentOutcomes;
+        }
+
+        $offset = (int) (Redis::get("master_outcomes_offset:{$this->masterConnectionId}:{$setting->user_id}") ?? 0);
+        $newCount = max(0, $totalLen - $offset);
+
+        if ($newCount === 0) {
+            return [];
+        }
+
+        return array_slice($recentOutcomes, -$newCount);
+    }
 
     private function getRecentOutcomes(int $masterConnectionId): array
     {
