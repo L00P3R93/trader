@@ -103,13 +103,13 @@
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
-        {{-- Mobile Header --}}
-        <flux:header class="border-b border-[#1F2937] bg-[#0B1220] lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+        {{-- Top nav: always visible on mobile, shown on desktop only when sidebar is collapsed --}}
+        <flux:header class="border-b border-[#1F2937] bg-[#0B1220] collapsible-nav-header">
+            <flux:sidebar.toggle icon="bars-2" inset="left" />
 
             <flux:spacer />
 
-            <flux:dropdown position="top" align="end">
+            <flux:dropdown class="lg:hidden" position="top" align="end">
                 <flux:profile
                     :avatar="auth()->user()->gravatar()"
                     icon-trailing="chevron-down"

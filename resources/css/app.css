@@ -80,3 +80,18 @@ textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
+
+/* Desktop: fully hide sidebar when collapsed (same as mobile — no icon strip) */
+@media (min-width: 1024px) {
+    [data-flux-sidebar][data-flux-sidebar-collapsed-desktop] {
+        width: 0 !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Hide the top nav on desktop while sidebar is visible */
+    body:not(:has([data-flux-sidebar][data-flux-sidebar-collapsed-desktop])) .collapsible-nav-header {
+        display: none;
+    }
+}

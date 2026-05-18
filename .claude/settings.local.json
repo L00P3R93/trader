@@ -105,7 +105,8 @@
       "Bash(findstr /E \"\\(copy|deriv\\)\")",
       "Skill(livewire-development)",
       "Bash(git show *)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(node *)"
     ]
   },
   "enableAllProjectMcpServers": true,

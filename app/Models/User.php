@@ -90,6 +90,6 @@ class User extends Authenticatable
     {
         $hash = md5(strtolower(trim($this->email)));
 
-        return "https://www.gravatar.com/avatar/{$hash}?s={$size}&d=mp";
+        return "https://www.gravatar.com/avatar/{$hash}?s={$size}&d=robohash";
     }
 }
