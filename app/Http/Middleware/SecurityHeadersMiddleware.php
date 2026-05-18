@@ -23,7 +23,7 @@ class SecurityHeadersMiddleware
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://wati-integration-prod-service.clare.ai",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net",
             "img-src 'self' data: https:",
             "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com",
             "connect-src 'self' wss: https:",
