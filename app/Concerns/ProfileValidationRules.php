@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use App\Rules\NotDisposableEmail;
 use Illuminate\Validation\Rule;
 
 trait ProfileValidationRules
@@ -27,7 +28,12 @@ trait ProfileValidationRules
      */
     protected function nameRules(): array
     {
-        return ['required', 'string', 'max:255'];
+        return [
+            'required',
+            'string',
+            'max:100',
+            'regex:/^[\pL\s\'\-\.]+$/u',
+        ];
     }
 
     /**
@@ -40,11 +46,12 @@ trait ProfileValidationRules
         return [
             'required',
             'string',
-            'email',
+            app()->isProduction() ? 'email:rfc,dns' : 'email:rfc',
             'max:255',
             $userId === null
                 ? Rule::unique(User::class)
                 : Rule::unique(User::class)->ignore($userId),
+            new NotDisposableEmail,
         ];
     }
 }

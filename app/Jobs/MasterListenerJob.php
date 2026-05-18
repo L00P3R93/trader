@@ -155,6 +155,15 @@ class MasterListenerJob implements ShouldQueue
     {
         $msgType = $message['msg_type'] ?? '';
 
+        if ($msgType === 'error') {
+            $error = $message['error'] ?? [];
+            Log::error("MasterListenerJob: Deriv API error for connection #{$this->connectionId}", [
+                'code' => $error['code'] ?? 'unknown',
+                'message' => $error['message'] ?? 'unknown',
+            ]);
+            throw new \RuntimeException('Deriv API error: '.($error['message'] ?? 'unknown'));
+        }
+
         if ($msgType === 'transaction') {
             $transaction = $message['transaction'] ?? [];
             $action = $transaction['action'] ?? '';
@@ -318,7 +327,7 @@ class MasterListenerJob implements ShouldQueue
 
     private function receiveWsMessage($socket): ?array
     {
-        $header = fread($socket, 2);
+        $header = $this->readExactly($socket, 2);
 
         if (strlen($header) < 2) {
             return null;
@@ -328,13 +337,13 @@ class MasterListenerJob implements ShouldQueue
         $payloadLength = ord($header[1]) & 0x7F;
 
         if ($payloadLength === 126) {
-            $payloadLength = unpack('n', fread($socket, 2))[1];
+            $payloadLength = (int) unpack('n', $this->readExactly($socket, 2))[1];
         } elseif ($payloadLength === 127) {
-            $payloadLength = unpack('J', fread($socket, 8))[1];
+            $payloadLength = (int) unpack('J', $this->readExactly($socket, 8))[1];
         }
 
-        $mask = $isMasked ? fread($socket, 4) : null;
-        $payload = fread($socket, $payloadLength);
+        $mask = $isMasked ? $this->readExactly($socket, 4) : null;
+        $payload = $this->readExactly($socket, $payloadLength);
 
         if ($mask) {
             for ($i = 0; $i < $payloadLength; $i++) {
@@ -343,5 +352,24 @@ class MasterListenerJob implements ShouldQueue
         }
 
         return json_decode($payload, true);
+    }
+
+    private function readExactly($socket, int $length): string
+    {
+        $data = '';
+        $remaining = $length;
+
+        while ($remaining > 0) {
+            $chunk = fread($socket, $remaining);
+
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+
+            $data .= $chunk;
+            $remaining -= strlen($chunk);
+        }
+
+        return $data;
     }
 }

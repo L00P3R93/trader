@@ -1,10 +1,11 @@
 <?php
 
 use App\Jobs\CopyTradeJob;
+use App\Jobs\PlaceFollowerTradeJob;
 use App\Models\CopySetting;
 use App\Models\DerivConnection;
 use App\Models\User;
-use App\Services\DerivApiService;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Redis;
 
 $masterTrade = [
@@ -37,51 +38,46 @@ function makeFollower(DerivConnection $master, array $settingOverrides = []): Co
     ], $settingOverrides));
 }
 
-test('places a trade and records CopyTrade for an active follower', function () use ($masterTrade) {
-    $master = makeMaster();
-    makeFollower($master);
+test('dispatches PlaceFollowerTradeJob for an active follower', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldReceive('buyContract')
-        ->once()
-        ->andReturn(['buy' => ['transaction_id' => 99999]]);
+    $master = makeMaster();
+    $setting = makeFollower($master);
 
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseHas('copy_trades', [
-        'master_connection_id' => $master->id,
-        'master_trx_id' => 111111,
-        'follower_trx_id' => 99999,
-        'symbol' => 'R_50',
-        'contract_type' => 'CALL',
-    ]);
+    Bus::assertDispatched(PlaceFollowerTradeJob::class, function ($job) use ($master, $setting) {
+        return $job->masterConnectionId === $master->id
+            && $job->userId === $setting->user_id
+            && $job->stake === 1.00;
+    });
 });
 
-test('uses follower stake when follow_master_stake is false', function () use ($masterTrade) {
+test('dispatches with follower stake when follow_master_stake is false', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     makeFollower($master, ['stake' => 3.50, 'follow_master_stake' => false]);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldReceive('buyContract')->once()->andReturn(['buy' => ['transaction_id' => 1]]);
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseHas('copy_trades', ['master_connection_id' => $master->id, 'stake' => 3.50]);
+    Bus::assertDispatched(PlaceFollowerTradeJob::class, fn ($job) => $job->stake === 3.50);
 });
 
-test('uses master buy_price as stake when follow_master_stake is true', function () use ($masterTrade) {
+test('dispatches with master buy_price as stake when follow_master_stake is true', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     makeFollower($master, ['stake' => 1.00, 'follow_master_stake' => true]);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldReceive('buyContract')->once()->andReturn(['buy' => ['transaction_id' => 1]]);
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseHas('copy_trades', ['master_connection_id' => $master->id, 'stake' => 2.50]);
+    Bus::assertDispatched(PlaceFollowerTradeJob::class, fn ($job) => $job->stake === 2.50);
 });
 
-test('skips follower with expired token', function () use ($masterTrade) {
+test('does not dispatch for follower with expired token', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     $followerUser = User::factory()->create();
     DerivConnection::factory()->expired()->create(['user_id' => $followerUser->id, 'type' => 'follower']);
@@ -93,93 +89,70 @@ test('skips follower with expired token', function () use ($masterTrade) {
         'pattern_enabled' => false,
     ]);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldNotReceive('buyContract');
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
+    Bus::assertNotDispatched(PlaceFollowerTradeJob::class);
 });
 
-test('skips follower with inactive settings', function () use ($masterTrade) {
+test('does not dispatch for follower with inactive settings', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     makeFollower($master, ['is_active' => false]);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldNotReceive('buyContract');
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
+    Bus::assertNotDispatched(PlaceFollowerTradeJob::class);
 });
 
-test('allows copy when pattern matches master Redis outcomes', function () use ($masterTrade) {
+test('dispatches when pattern matches master Redis outcomes', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     makeFollower($master, [
         'pattern_enabled' => true,
         'follower_pattern' => '11',
     ]);
 
-    // Populate Redis with 2 wins (newest first in Redis, reversed for matching)
     Redis::del("master_outcomes:{$master->id}");
     Redis::lpush("master_outcomes:{$master->id}", 1, 1);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldReceive('buyContract')->once()->andReturn(['buy' => ['transaction_id' => 1]]);
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseHas('copy_trades', ['master_connection_id' => $master->id]);
+    Bus::assertDispatched(PlaceFollowerTradeJob::class);
 
     Redis::del("master_outcomes:{$master->id}");
 });
 
-test('skips follower when pattern does not match master Redis outcomes', function () use ($masterTrade) {
+test('does not dispatch when pattern does not match master Redis outcomes', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     makeFollower($master, [
         'pattern_enabled' => true,
         'follower_pattern' => '111',
     ]);
 
-    // 2 wins then 1 loss in Redis — pattern "110" does not match "111"
+    // 2 wins then 1 loss — pattern "110" does not match "111"
     Redis::del("master_outcomes:{$master->id}");
     Redis::lpush("master_outcomes:{$master->id}", 0, 1, 1);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldNotReceive('buyContract');
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
+    Bus::assertNotDispatched(PlaceFollowerTradeJob::class);
 
     Redis::del("master_outcomes:{$master->id}");
 });
 
-test('skips follower when traded symbol is filtered out', function () use ($masterTrade) {
+test('does not dispatch when traded symbol is filtered out', function () use ($masterTrade) {
+    Bus::fake([PlaceFollowerTradeJob::class]);
+
     $master = makeMaster();
     makeFollower($master, [
         'filter_markets' => ['1HZ100V', '1HZ10V'], // R_50 not in list
     ]);
 
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldNotReceive('buyContract');
-
     CopyTradeJob::dispatchSync($master->id, $masterTrade);
 
-    $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
-});
-
-test('logs error and continues when buyContract throws', function () use ($masterTrade) {
-    $master = makeMaster();
-    makeFollower($master);
-
-    $mock = $this->mock(DerivApiService::class);
-    $mock->shouldReceive('buyContract')
-        ->once()
-        ->andThrow(new Exception('WS unavailable'));
-
-    // Should not throw — errors are caught per-follower
-    CopyTradeJob::dispatchSync($master->id, $masterTrade);
-
-    $this->assertDatabaseMissing('copy_trades', ['master_connection_id' => $master->id]);
+    Bus::assertNotDispatched(PlaceFollowerTradeJob::class);
 });

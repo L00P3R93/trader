@@ -19,18 +19,20 @@ class UserSeeder extends BaseSeeder
         $phone = config('app.admin_phone');
         $email = config('app.admin_email');
         $password = config('app.admin_password');
-        User::query()->create([
+        $admin = User::query()->create([
             'account_no' => 'ACC'.str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT),
             'name' => $name,
             'username' => Str::slug($name),
             'email' => $email,
-            'is_admin' => true,
             'phone' => $phone,
-            'email_verified_at' => now(),
             'password' => Hash::make($password),
             'remember_token' => Str::random(10),
-            'status' => 'active',
         ]);
+
+        $admin->is_admin = true;
+        $admin->status = 'active';
+        $admin->email_verified_at = now();
+        $admin->save();
         $this->command->info("✓ Admin: {$name} created.");
     }
 }

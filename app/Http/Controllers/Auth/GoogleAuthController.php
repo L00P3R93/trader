@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -20,6 +22,9 @@ class GoogleAuthController extends Controller
     {
         $googleUser = Socialite::driver('google')->user();
 
+        $googleName = htmlspecialchars(strip_tags(trim($googleUser->getName() ?? '')), ENT_QUOTES, 'UTF-8');
+        $googleEmail = strtolower(trim($googleUser->getEmail() ?? ''));
+
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if ($user) {
@@ -28,7 +33,7 @@ class GoogleAuthController extends Controller
             return redirect()->intended(route('dashboard'));
         }
 
-        $user = User::where('email', $googleUser->getEmail())->first();
+        $user = User::where('email', $googleEmail)->first();
 
         if ($user) {
             $user->google_id = $googleUser->getId();
@@ -47,8 +52,8 @@ class GoogleAuthController extends Controller
 
         $user = User::create([
             'account_no' => $this->generateAccountNumber(),
-            'name' => $googleUser->getName(),
-            'email' => $googleUser->getEmail(),
+            'name' => $googleName,
+            'email' => $googleEmail,
             'google_id' => $googleUser->getId(),
             'avatar' => $googleUser->getAvatar(),
             'password' => null,
@@ -56,6 +61,8 @@ class GoogleAuthController extends Controller
 
         $user->email_verified_at = now();
         $user->save();
+
+        Mail::to($user)->send(new WelcomeMail($user));
 
         Auth::login($user, remember: true);
 

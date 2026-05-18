@@ -158,6 +158,7 @@
                 localStorage.setItem('flux-sidebar-collapsed-desktop', 'true');
             }
         </script>
+        @include('partials.support-fabs')
         @fluxScripts
     </body>
 </html>

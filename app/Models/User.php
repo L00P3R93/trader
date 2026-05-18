@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Notifications\Auth\VerifyEmailNotification;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -11,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -25,8 +27,6 @@ class User extends Authenticatable
         'password',
         'google_id',
         'avatar',
-        'is_admin',
-        'status',
         'onboarding_completed_at',
     ];
 
@@ -96,5 +96,10 @@ class User extends Authenticatable
         $hash = md5(strtolower(trim($this->email)));
 
         return "https://www.gravatar.com/avatar/{$hash}?s={$size}&d=robohash";
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 }

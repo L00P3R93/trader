@@ -27,7 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/deriv/disconnect', [DerivOAuthController::class, 'disconnect'])->name('deriv.disconnect');
 });
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', fn () => view('pages.admin.dashboard'))->name('admin.dashboard');
     Route::get('/users', fn () => view('pages.admin.users'))->name('admin.users');
     Route::get('/settings', fn () => view('pages.admin.settings'))->name('admin.settings');

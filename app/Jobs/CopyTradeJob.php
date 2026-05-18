@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Models\CopySetting;
 use App\Models\CopyTrade;
 use App\Models\DerivConnection;
-use App\Services\DerivApiService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Queue\Queueable;
@@ -26,7 +25,7 @@ class CopyTradeJob implements ShouldQueue
         public readonly array $masterTrade,
     ) {}
 
-    public function handle(DerivApiService $deriv): void
+    public function handle(): void
     {
         $masterConnection = DerivConnection::find($this->masterConnectionId);
 
@@ -88,55 +87,18 @@ class CopyTradeJob implements ShouldQueue
 
             $stake = $this->calculateStake($setting, $sessionTrades);
 
-            try {
-                $symbol = $this->masterTrade['symbol'] ?? $this->masterTrade['underlying'] ?? 'R_50';
+            PlaceFollowerTradeJob::dispatch(
+                followerConnectionId: $followerConnection->id,
+                masterConnectionId: $this->masterConnectionId,
+                masterTrade: $this->masterTrade,
+                stake: $stake,
+                userId: $setting->user_id,
+                followerAccountId: $setting->follower_account_id,
+                markPatternConsumed: $setting->pattern_enabled && ! empty($setting->follower_pattern),
+                markWaitTrigger: $setting->wait_for_loss > 0 && $setting->only_use_1x_wait_for_loss,
+            );
 
-                $result = $deriv->buyContract($followerConnection, [
-                    'contract_type' => $this->masterTrade['contract_type'] ?? 'CALL',
-                    'symbol' => $symbol,
-                    'duration' => $this->masterTrade['duration'] ?? 1,
-                    'duration_unit' => $this->masterTrade['duration_unit'] ?? 't',
-                    'stake' => $stake,
-                    'basis' => 'stake',
-                    'barrier' => $this->masterTrade['barrier'] ?? null,
-                    'follower_account_id' => $setting->follower_account_id,
-                ]);
-
-                $followerContractId = (string) ($result['buy']['contract_id'] ?? '');
-
-                $copyTrade = CopyTrade::create([
-                    'user_id' => $setting->user_id,
-                    'master_connection_id' => $this->masterConnectionId,
-                    'follower_trx_id' => $result['buy']['transaction_id'] ?? null,
-                    'follower_contract_id' => $followerContractId ?: null,
-                    'master_trx_id' => $this->masterTrade['transaction_id'] ?? null,
-                    'symbol' => $symbol,
-                    'contract_type' => $this->masterTrade['contract_type'] ?? null,
-                    'duration' => ($this->masterTrade['duration'] ?? '').($this->masterTrade['duration_unit'] ?? ''),
-                    'barrier' => $this->masterTrade['barrier'] ?? null,
-                    'stake' => $stake,
-                    'traded_at' => now(),
-                ]);
-
-                // Lock pattern — next buy for this user is blocked until master sells
-                if ($setting->pattern_enabled && ! empty($setting->follower_pattern)) {
-                    $this->markPatternConsumed($setting->user_id);
-                }
-
-                // Record that wait_for_loss trigger was used (for only_use_1x mode)
-                if ($setting->wait_for_loss > 0 && $setting->only_use_1x_wait_for_loss) {
-                    Cache::put($this->waitTriggerUsedKey($setting->user_id), true, now()->addHours(24));
-                }
-
-                if ($followerContractId) {
-                    SettleCopyTradeJob::dispatch($copyTrade->id, $followerConnection->id, $followerContractId)
-                        ->delay(now()->addSeconds(5));
-                }
-
-                Log::info("CopyTradeJob: trade copied for user {$setting->user_id} — {$symbol} stake={$stake}");
-            } catch (\Throwable $e) {
-                Log::error("CopyTradeJob failed for user {$setting->user_id}: {$e->getMessage()}");
-            }
+            Log::info("CopyTradeJob: dispatched PlaceFollowerTradeJob for user {$setting->user_id}");
         }
     }
 
@@ -144,12 +106,12 @@ class CopyTradeJob implements ShouldQueue
 
     private function isPatternConsumed(int $userId): bool
     {
-        return Cache::has($this->patternConsumedKey($userId));
+        return Cache::has(self::patternConsumedKey($this->masterConnectionId, $userId));
     }
 
     private function markPatternConsumed(int $userId): void
     {
-        Cache::put($this->patternConsumedKey($userId), true, now()->addMinutes(10));
+        Cache::put(self::patternConsumedKey($this->masterConnectionId, $userId), true, now()->addMinutes(10));
         // Record offset so the ticker resets and shows only outcomes after this trade
         $len = Redis::llen("master_outcomes:{$this->masterConnectionId}");
         Redis::setex("master_outcomes_offset:{$this->masterConnectionId}:{$userId}", 600, $len);
@@ -161,12 +123,12 @@ class CopyTradeJob implements ShouldQueue
             ->where('master_connection_id', $masterConnectionId)
             ->where('is_running', true)
             ->pluck('user_id')
-            ->each(fn ($uid) => Cache::forget("copy:pattern_consumed:{$masterConnectionId}:{$uid}"));
+            ->each(fn ($uid) => Cache::forget(self::patternConsumedKey($masterConnectionId, $uid)));
     }
 
-    private function patternConsumedKey(int $userId): string
+    public static function patternConsumedKey(int $masterConnectionId, int $userId): string
     {
-        return "copy:pattern_consumed:{$this->masterConnectionId}:{$userId}";
+        return "copy:pattern_consumed:{$masterConnectionId}:{$userId}";
     }
 
     // ─── Wait-trigger tracking ─────────────────────────────────────────────────

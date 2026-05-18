@@ -106,7 +106,19 @@
       "Skill(livewire-development)",
       "Bash(git show *)",
       "Bash(powershell *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(xargs grep -l \"register\\\\|Register\")",
+      "Bash(xargs grep -l \"email\\\\|mail\\\\|verification\\\\|welcome\")",
+      "Bash(git -C /c/Users/EMILY/Documents/sites/trader log --oneline --diff-filter=M -- tests/Unit/UserGravatarTest.php)",
+      "Bash(grep -n '$fillable' /c/Users/EMILY/Documents/sites/trader/app/Models/CopySetting.php)",
+      "Bash(grep -n '$fillable' /c/Users/EMILY/Documents/sites/trader/app/Models/CopyTrade.php)",
+      "Bash(grep -n '$fillable' /c/Users/EMILY/Documents/sites/trader/app/Models/DerivConnection.php)",
+      "Bash(composer audit *)",
+      "Bash(npm --prefix /c/Users/EMILY/Documents/sites/trader audit --json)",
+      "Bash(npm --prefix /c/Users/EMILY/Documents/sites/trader audit)",
+      "Bash(npm --prefix /c/Users/EMILY/Documents/sites/trader audit fix)",
+      "Bash(grep -n 'fill\\\\|$validated\\\\|update\\\\|save' /c/Users/EMILY/Documents/sites/trader/resources/views/pages/settings/⚡profile.blade.php)",
+      "Skill(fluxui-development)"
     ]
   },
   "enableAllProjectMcpServers": true,

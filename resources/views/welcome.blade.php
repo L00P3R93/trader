@@ -718,5 +718,6 @@
     </div>
 </footer>
 
+@include('partials.support-fabs')
 </body>
 </html>

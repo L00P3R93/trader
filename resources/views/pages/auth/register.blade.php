@@ -7,6 +7,11 @@
 
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
+            {{-- Honeypot: hidden from real users, traps bots --}}
+            <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true" tabindex="-1">
+                <label for="website">Website</label>
+                <input type="text" name="website" id="website" value="" autocomplete="off" tabindex="-1">
+            </div>
             <!-- Name -->
             <flux:input
                 name="name"

@@ -35,7 +35,8 @@ class UserManagement extends Component
             return;
         }
 
-        $user->update(['is_admin' => ! $user->is_admin]);
+        $user->is_admin = ! $user->is_admin;
+        $user->save();
     }
 
     public function toggleMaster(int $userId): void
