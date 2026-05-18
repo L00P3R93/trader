@@ -38,8 +38,8 @@ new class extends Component {
             </flux:text>
 
             <flux:button wire:click="unlinkGoogle" wire:loading.attr="disabled" variant="ghost" size="sm">
-                <wire:loading wire:target="unlinkGoogle">{{ __('Unlinking…') }}</wire:loading>
-                <wire:loading.remove wire:target="unlinkGoogle">{{ __('Unlink') }}</wire:loading.remove>
+                <span wire:loading.remove wire:target="unlinkGoogle">{{ __('Unlink') }}</span>
+                <span wire:loading wire:target="unlinkGoogle">{{ __('Unlinking…') }}</span>
             </flux:button>
         </div>
     @else
